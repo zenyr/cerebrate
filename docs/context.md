@@ -277,12 +277,12 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
   - [x] 테스트 작성 (커버리지 100%)
   - [x] 전체 커버리지: 99.11% funcs, 100% lines
 
-### Phase 2: MCP Integration
+### Phase 2: MCP Integration ✅ **완료**
 
-- [ ] MCP 클라이언트 구현 (하위 서버 연결)
+- [x] MCP 클라이언트 구현 (하위 서버 연결)
   - stdio 프로토콜 지원
   - tools/list 조회 및 scope 등록
-- [ ] MCP 서버 구현 (AI 앱 대응)
+- [x] MCP 서버 구현 (AI 앱 대응)
   - initialize 핸들러
   - tools/list 핸들러
   - tools/call 핸들러 + 프록시
@@ -327,6 +327,15 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 - 현재: @opentui/react
 - 대안: ink, blessed
 - 고려사항: React 친숙도, 기능
+
+**Q5: Hono 핸들러와 MCP SDK 스펙 싱크를 위한 패키지?** ✅ **해결**
+
+- **결정**: `fetch-to-node` 패키지 사용
+- **근거**:
+  - Hono는 web fetch API를 사용하지만 MCP SDK는 Node.js 환경에서 작동
+  - `fetch-to-node`는 Node.js fetch와 web fetch 간 변환을 제공하여 호환성 확보
+  - MCP helper integration에서 Hono 핸들러와 MCP SDK 스펙을 싱크하는 데 사용됨
+  - 간단한 의존성 추가로 HTTP transport 지원 시 유용
 
 ## 참고 자료
 

@@ -7,6 +7,9 @@
     "./eslint": "./eslint.config.ts"
   },
   "files": ["tsconfig.json", "eslint.config.ts"],
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
   "devDependencies": {
     "@types/bun": "^1.2.23",
     "eslint": "^9.36.0",
