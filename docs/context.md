@@ -240,6 +240,7 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 
 - Strict mode 활성화
 - `any`, `unknown`, `@ts-ignore` 금지 (util/test만 명시적 주석과 함께 허용)
+- 테스트에서는 `@ts-expect-error` 사용 가능 (타입 에러 케이스 검증용)
 - 추론 가능한 타입은 생략
 
 **Import 규칙**:
@@ -256,12 +257,19 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 - Plain objects > classes (필요시 class 사용 가능)
 - 주석 최소화 (self-documenting code)
 
+**테스트 규칙**:
+
+- bun:test 전용 사용 (jest/vitest 금지)
+- 테스트 파일은 co-location (예: `tool-registry.test.ts`)
+- 커버리지 목표: 적정 수준 (96%+ 권장, 100% 필수 아님)
+
 ## 다음 구현 우선순위
 
-### Phase 1: Core Infrastructure
+### Phase 1: Core Infrastructure ✅
 
 - [x] ToolRegistry 구현
 - [x] Core tools 정의 (enableTools, listAvailableScopes)
+- [x] Registry 테스트 작성 (커버리지 96.88%)
 - [ ] 인증 (SQLite + 암호화)
 
 ### Phase 2: MCP Integration

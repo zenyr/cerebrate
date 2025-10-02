@@ -49,9 +49,10 @@ packages/
 ```
 
 #### 5. **기술적 세부사항**
-- **타입 안정성**: MCP Tool은 `MCPTool` 타입으로 명명 (AI SDK의 `Tool` 타입과 충돌 방지)
+- **타입 안정성**: MCP Tool은 `@modelcontextprotocol/sdk`의 `Tool` 타입 직접 사용
 - **클라이언트 감지**: `initialize` 핸드셰이크에서 `clientInfo.name`과 `protocolVersion`으로 동적 툴 업데이트 지원 여부 판단
 - **네임스페이싱**: 모든 활성화된 툴은 `{scope}/{toolName}` 형태로 제공
+- **테스트**: bun:test 전용 사용 (jest/vitest 금지), co-location 전략, 96%+ 커버리지 목표
 
 #### 6. **향후 확장 아이디어**
 - API 호출 Reverse Proxy(MITM) 엔드포인트를 추가하여, 매직워드(특정 키워드)를 추출하고 관련 툴을 동적으로 추가하는 기능 고려.
