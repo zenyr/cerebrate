@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/index.tsx",
   "scripts": {
-    "lint": "eslint src/**/*.{ts,tsx}",
+    "lint": "eslint src/",
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {

@@ -1,9 +1,5 @@
 {
   "extends": "@cerebrate/config/tsconfig",
-  "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src"
-  },
+  "compilerOptions": { "rootDir": "src", "paths": { "@/*": ["src/*"] } },
   "include": ["src"],
-  "exclude": ["node_modules", "dist"]
 }

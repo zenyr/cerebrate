@@ -1,13 +1,11 @@
 {
   "extends": "@cerebrate/config/tsconfig",
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"],
   "compilerOptions": {
+    "rootDir": "src",
+    "paths": { "@/*": ["src/*"] },
     "jsx": "react-jsx",
     "jsxImportSource": "@opentui/react",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
-  }
+    "baseUrl": "."
+  },
+  "include": ["src"]
 }
