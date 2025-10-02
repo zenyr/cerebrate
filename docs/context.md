@@ -5,7 +5,7 @@
 - **목적**: MCP MITM 서버로 AI 클라이언트의 토큰 사용 최적화
 - **핵심 아이디어**: 필요한 MCP 툴만 동적으로 활성화하여 LLM 컨텍스트 절약
 - **포트**: 3878 (cer-e-br-ate)
-- **기술 스택**: Bun, TypeScript, MCP Protocol
+- **기술 스택**: Bun, TypeScript, MCP Protocol, Hono
 
 ## 핵심 아키텍처 결정 (ADR)
 
@@ -86,6 +86,34 @@ enableTools({ scope: "filesystem" })
 
 **적용 위치**: `@cerebrate/core/protocol/types.ts`에서 reexport
 
+### ADR-004: Streaming-HTTP Protocol Support
+
+**결정**: Hono 기반 streaming-http 프로토콜 추가 지원
+
+**컨텍스트**:
+
+- 현재 stdio 프로토콜만 지원하여 로컬 환경에 제한됨
+- HTTP 기반 프로토콜로 확장하여 원격 접속 가능성 필요
+- 보안 강화를 위해 key 기반 인증 요구
+
+**결정 내용**:
+
+- stdio 외에 Hono 기반 streaming-http 프로토콜 지원
+- 엔드포인트: `/mcp?key={something}`
+- key는 .env에 `CEREBRATE_HTTP_KEY`로 선언
+- NODE_ENV가 'test'가 아니면 key 필수 존재 (없으면 서버 구동 실패)
+
+**근거**:
+
+- HTTP 기반으로 원격 MCP 클라이언트 지원 가능
+- key 기반 인증으로 보안 강화
+- Hono의 경량성과 성능으로 효율적 구현
+
+**트레이드오프**:
+
+- 장점: 확장성 증가, 원격 접속 가능
+- 단점: 추가 복잡도 및 의존성 (Hono)
+
 ## 패키지 구조 (실용적 분할)
 
 ```
@@ -163,6 +191,7 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 **위치**: `@cerebrate/core/registry/core-tools.ts`
 
 **ENABLE_TOOLS**:
+
 ```typescript
 {
   name: 'enableTools',
@@ -176,6 +205,7 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 ```
 
 **LIST_AVAILABLE_SCOPES**:
+
 ```typescript
 {
   name: 'listAvailableScopes',
@@ -296,6 +326,8 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 
 ### Phase 4: UI & DX
 
+- [ ] Hono 기반 streaming-http 프로토콜 지원 추가 (/mcp?key={something} 형태로 key 필요)
+- [ ] .env에서 streaming-http key 관리 및 검증 로직 구현 (NODE_ENV=test 제외 필수)
 - [ ] TUI 구현 (활성화된 scope 모니터링)
 - [ ] 설정 파일 로더
 - [ ] CLI 인터페이스
@@ -305,7 +337,7 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 **Q1: SQLite 암호화 라이브러리?** ✅ **해결**
 
 - **결정**: Bun 네이티브 `bun:sqlite` + 레코드 레벨 암호화
-- **근거**: 
+- **근거**:
   - `bun:sqlite`는 SQLCipher 미지원 (전체 DB 암호화 불가)
   - 민감 데이터가 인증 코드뿐이므로 레코드 레벨 암호화로 충분
   - 인증 코드를 AES-256-GCM으로 암호화하여 저장/조회
@@ -334,7 +366,7 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 - **근거**:
   - Hono는 web fetch API를 사용하지만 MCP SDK는 Node.js 환경에서 작동
   - `fetch-to-node`는 Node.js fetch와 web fetch 간 변환을 제공하여 호환성 확보
-  - MCP helper integration에서 Hono 핸들러와 MCP SDK 스펙을 싱크하는 데 사용됨
+  - MCP helper integration에서 Hono 핸들러와 MCP SDK 스펙을 싱크하는 데 사용됨 (힌트: toRequest 메소드로 Request 객체 생성 및 변환 가능)
   - 간단한 의존성 추가로 HTTP transport 지원 시 유용
 
 ## 참고 자료
