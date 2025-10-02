@@ -265,12 +265,17 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 
 ## 다음 구현 우선순위
 
-### Phase 1: Core Infrastructure ✅
+### Phase 1: Core Infrastructure ✅ **완료**
 
 - [x] ToolRegistry 구현
 - [x] Core tools 정의 (enableTools, listAvailableScopes)
-- [x] Registry 테스트 작성 (커버리지 96.88%)
-- [ ] 인증 (SQLite + 암호화)
+- [x] Registry 테스트 작성 (커버리지 93.75%)
+- [x] 인증 시스템 구현
+  - [x] nanoid 기반 코드 생성 (`ck-{21chars}`)
+  - [x] AES-256-GCM 레코드 레벨 암호화
+  - [x] SQLite 저장소 (bun:sqlite)
+  - [x] 테스트 작성 (커버리지 100%)
+  - [x] 전체 커버리지: 99.11% funcs, 100% lines
 
 ### Phase 2: MCP Integration
 
@@ -297,10 +302,15 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 
 ## 미해결 질문 & 기술 선택
 
-**Q1: SQLite 암호화 라이브러리?**
+**Q1: SQLite 암호화 라이브러리?** ✅ **해결**
 
-- 옵션: better-sqlite3 + sqlcipher, bun:sqlite + 직접 암호화
-- 고려사항: Bun 네이티브 지원 vs 기능 풍부함
+- **결정**: Bun 네이티브 `bun:sqlite` + 레코드 레벨 암호화
+- **근거**: 
+  - `bun:sqlite`는 SQLCipher 미지원 (전체 DB 암호화 불가)
+  - 민감 데이터가 인증 코드뿐이므로 레코드 레벨 암호화로 충분
+  - 인증 코드를 AES-256-GCM으로 암호화하여 저장/조회
+  - 전체 파일 암호화 대비 성능 우수 (시작/종료 오버헤드 없음)
+  - 키 관리: 환경변수 `CEREBRATE_ENCRYPTION_KEY` (32 bytes hex)
 
 **Q2: MCP 서버 설정 파일 형식?**
 

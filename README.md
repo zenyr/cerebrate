@@ -10,8 +10,12 @@ Cerebrate acts as both an MCP client and server, intercepting and selectively ex
 
 - **MITM Architecture**: Positions itself between AI client apps and MCP servers.
 - **Selective Exposure**: Dynamically enables tools based on client requests.
-- **Security**: Requires authentication codes stored in an encrypted SQLite database.
+- **Security**: 
+  - Authentication codes (`ck-{nanoid}`) with AES-256-GCM encryption
+  - SQLite storage with record-level encryption
+  - Environment-based key management
 - **Port Configuration**: Defaults to 3878, configurable via `PORT` environment variable or arguments.
+- **Type Safety**: Strict TypeScript with 99%+ test coverage.
 
 ## Architecture
 
