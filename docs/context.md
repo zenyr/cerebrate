@@ -11,40 +11,52 @@
 
 ### ADR-001: 동적 툴 활성화 메커니즘
 
-**결정**: `enableTools` 툴 + MCP 표준 `notifications/tools/list_changed` 사용
+**결정**: `enableTools` 단일 전략 + 범용 프록시
 
 **컨텍스트**:
 
 - 모든 하위 MCP 서버의 툴을 처음부터 노출하면 LLM 컨텍스트 낭비
 - 필요한 툴만 선택적으로 노출하는 메커니즘 필요
+- 클라이언트 capability 감지는 복잡도만 증가
 
 **결정 내용**:
 
 ```typescript
-// 초기 상태: 2개 툴만 노출
+// 초기 상태 (모든 클라이언트 동일)
 tools/list → [enableTools, listAvailableScopes]
 
-// LLM이 필요 시 활성화
+// LLM이 scope 활성화
 enableTools({ scope: "filesystem" })
-→ notifications/tools/list_changed 발송
-→ tools/list → [enableTools, listAvailableScopes, filesystem/read_file, ...]
+→ ToolRegistry.activateScope("filesystem")
+→ notifications/tools/list_changed 발송 (지원하면 받을 것)
+→ 응답: "filesystem/read_file, filesystem/write_file 등이 활성화됨. {scope}/{tool} 형식으로 호출하세요"
+
+// 지원 클라이언트: 알림 받고 tools/list 재호출
+→ [enableTools, listAvailableScopes, filesystem/read_file, ...]
+→ LLM이 filesystem/read_file 직접 호출 (타입 안전)
+
+// 미지원 클라이언트: 응답 메시지 보고 추측
+→ LLM이 filesystem/read_file 호출 시도
+→ tools/call로 들어옴 → Cerebrate가 파싱하여 프록시
 ```
 
 **근거**:
 
-- MCP 표준 `notifications/tools/list_changed` 활용 (표준 준수)
-- 초기 툴 목록 최소화로 토큰 절약
-- LLM이 필요한 scope만 명시적으로 요청
+- 단일 워크플로우: 모든 클라이언트가 같은 초기 경험
+- 자동 적응: 지원 클라이언트는 자동 업데이트, 미지원은 수동 추측 (둘 다 작동)
+- Capability detection 불필요: 복잡도 감소
+- 초기 2개 툴만 노출하여 컨텍스트 절약
 
 **트레이드오프**:
 
-- 장점: 토큰 최적화, 명시적 제어
-- 단점: 미지원 클라이언트는 재접속 필요 (fallback 제공)
+- 장점: 단순함, 모든 클라이언트 호환, 토큰 최적화
+- 단점: 미지원 클라이언트는 툴 이름 추측 필요 (응답에 명시적 안내로 완화)
 
 **대안 검토**:
 
-1. Lazy Activation: 모든 툴 노출하되 내부적으로 lazy connect → 토큰 최적화 실패
-2. Static Exposure: 사전 설정된 툴만 노출 → 유연성 부족
+1. 이중 전략 (executeTool): capability 감지 복잡도 증가, 불필요
+2. Lazy Activation: 모든 툴 노출하되 내부적으로 lazy connect → 토큰 최적화 실패
+3. Static Exposure: 사전 설정된 툴만 노출 → 유연성 부족
 
 ### ADR-002: 네임스페이싱 전략
 
@@ -62,16 +74,17 @@ enableTools({ scope: "filesystem" })
 - 이름 충돌 방지 (여러 서버가 같은 툴명 가질 수 있음)
 - scope 단위 활성화/비활성화 용이
 
-### ADR-003: 타입 네이밍 (Tool → MCPTool)
+### ADR-003: 타입 네이밍 (SDK 표준 사용) ✅ **수정됨**
 
-**결정**: MCP Tool 타입을 `MCPTool`로 명명
+**결정**: `@modelcontextprotocol/sdk`의 `Tool` 타입을 그대로 사용
 
 **근거**:
 
-- AI SDK와 같은 라이브러리의 `Tool` 타입과 충돌 방지
-- MCP 프로토콜의 툴임을 명확히 표현
+- MCP 표준 타입명 준수
+- SDK 문서와 호환성 유지
+- 불필요한 alias 제거
 
-**적용 위치**: `@cerebrate/core/protocol/types.ts`
+**적용 위치**: `@cerebrate/core/protocol/types.ts`에서 reexport
 
 ## 패키지 구조 (실용적 분할)
 
@@ -128,36 +141,32 @@ class ToolRegistry {
 - 활성화된 scope의 툴 목록 제공 (자동 네임스페이싱)
 - 툴 이름으로 원본 scope 조회
 
-### Capability Detector
+### Tool Name Parsing
 
-**위치**: `@cerebrate/core/protocol/capability-detector.ts`
+**위치**: 향후 `@cerebrate/server`에서 구현
 
 **기능**:
 
 ```typescript
-detectToolListChangeSupport(params: InitializeParams): 'supported' | 'unknown'
+parseToolName(toolName: string): { scope: string; tool: string } | null
+// "filesystem/read_file" → { scope: "filesystem", tool: "read_file" }
 ```
-
-**판단 기준** (우선순위 순):
-
-1. Known client whitelist: `claude-desktop`, `continue`, `zed`
-2. Explicit capability: `capabilities.experimental.toolListChanged === true`
-3. Protocol version: `>= 2024-11-05`
 
 **활용**:
 
-- supported → 즉시 `notifications/tools/list_changed` 발송
-- unknown → fallback 전략 (재접속 안내 or lazy activation)
+- `tools/call` 요청 받을 때 네임스페이스 파싱
+- 활성화되지 않은 scope의 툴 호출 시 에러 반환
+- 해당 scope의 하위 MCP 서버로 프록시
 
 ### Core Tools
 
 **위치**: `@cerebrate/core/registry/core-tools.ts`
 
 **ENABLE_TOOLS**:
-
 ```typescript
 {
   name: 'enableTools',
+  description: 'Activate MCP server scope. Tools will be available as {scope}/{tool}.',
   inputSchema: {
     properties: {
       scope: { type: 'string' }  // 활성화할 MCP 서버 이름
@@ -167,10 +176,10 @@ detectToolListChangeSupport(params: InitializeParams): 'supported' | 'unknown'
 ```
 
 **LIST_AVAILABLE_SCOPES**:
-
 ```typescript
 {
   name: 'listAvailableScopes',
+  description: 'List all available MCP server scopes and their tools.',
   inputSchema: { properties: {} }  // 인자 없음
 }
 ```
@@ -190,25 +199,28 @@ detectToolListChangeSupport(params: InitializeParams): 'supported' | 'unknown'
 
 ```
 1. initialize 핸드셰이크
-   - 클라이언트 capability 감지
    - 인증코드 검증 (ck-{nanoid})
 
 2. tools/list 요청
-   → [enableTools, listAvailableScopes] 반환
+   → [enableTools, listAvailableScopes]
 ```
 
-### 3. LLM이 툴 활성화
+### 3. LLM이 scope 활성화
 
 ```
 1. enableTools({ scope: "filesystem" })
    - ToolRegistry.activateScope("filesystem")
+   - notifications/tools/list_changed 발송 (무조건)
+   - 응답: "Activated: filesystem/read_file, filesystem/write_file, ..."
 
-2. 클라이언트 capability에 따라:
-   a) supported: notifications/tools/list_changed 발송
-   b) unknown: response에 "재접속 필요" 메시지
+2a. 지원 클라이언트 (알림 수신)
+   - 자동으로 tools/list 재요청
+   → [enableTools, listAvailableScopes, filesystem/read_file, ...]
+   - LLM이 filesystem/read_file 직접 호출 (타입 안전)
 
-3. 클라이언트가 tools/list 재요청
-   → [enableTools, listAvailableScopes, filesystem/*, ...]
+2b. 미지원 클라이언트 (알림 무시)
+   - 응답 메시지 읽고 filesystem/read_file 호출 시도
+   - tools/call 요청 → Cerebrate가 파싱하여 프록시
 ```
 
 ### 4. LLM이 실제 툴 실행
@@ -249,8 +261,7 @@ detectToolListChangeSupport(params: InitializeParams): 'supported' | 'unknown'
 ### Phase 1: Core Infrastructure
 
 - [x] ToolRegistry 구현
-- [x] Capability detector 구현
-- [x] Core tools 정의
+- [x] Core tools 정의 (enableTools, listAvailableScopes)
 - [ ] 인증 (SQLite + 암호화)
 
 ### Phase 2: MCP Integration
@@ -288,10 +299,10 @@ detectToolListChangeSupport(params: InitializeParams): 'supported' | 'unknown'
 - 옵션: JSON, YAML, TypeScript config
 - 고려사항: 타입 안정성, 사용자 친화성
 
-**Q3: Fallback 전략 채택?**
+**Q3: Fallback 전략 채택?** ✅ **해결**
 
-- 옵션: 재접속 안내 only vs lazy activation 병행
-- 고려사항: UX vs 토큰 최적화 목표
+- 결정: 단일 전략 (capability detection 제거)
+- 근거: 단순함, 모든 클라이언트 자동 적응
 
 **Q4: TUI 프레임워크?**
 

@@ -1,4 +1,4 @@
-import type { MCPTool } from '@cerebrate/core/protocol';
+import type { Tool } from '@cerebrate/core/protocol';
 
 export type ToolName = `${string}/${string}`;
 export type ScopeName = string;
@@ -12,8 +12,12 @@ export interface MCPServerConfig {
 
 export interface ScopeInfo {
   name: ScopeName;
-  description: string;
-  tools: MCPTool[];
+  serverInfo: {
+    name: string;
+    version: string;
+  };
+  instructions?: string;
+  tools: Tool[];
   serverConfig: MCPServerConfig;
 }
 
@@ -45,8 +49,8 @@ export class ToolRegistry {
     return Array.from(this.availableScopes.keys());
   }
 
-  getExposedTools(): MCPTool[] {
-    const tools: MCPTool[] = [];
+  getExposedTools(): Tool[] {
+    const tools: Tool[] = [];
 
     for (const scopeName of this.activeScopes) {
       const scope = this.availableScopes.get(scopeName);
@@ -66,5 +70,49 @@ export class ToolRegistry {
   getScopeByToolName(toolName: ToolName): ScopeInfo | undefined {
     const scopeName = toolName.split('/')[0];
     return scopeName ? this.availableScopes.get(scopeName) : undefined;
+  }
+
+  getScopeInfo(scopeName: ScopeName): ScopeInfo | undefined {
+    return this.availableScopes.get(scopeName);
+  }
+
+  getToolUsageGuide(scopeName: ScopeName): string | undefined {
+    const scope = this.availableScopes.get(scopeName);
+    if (!scope) return undefined;
+
+    const header = `Scope "${scopeName}" activated (${scope.serverInfo.name} v${scope.serverInfo.version})`;
+    const instructions = scope.instructions ? `\n\n${scope.instructions}` : '';
+    
+    const toolList = scope.tools
+      .map((tool) => `- ${scopeName}/${tool.name}: ${tool.description || 'No description'}`)
+      .join('\n');
+
+    return `${header}${instructions}\n\nAvailable tools:\n${toolList}\n\nCall format: {scope}/{toolName}`;
+  }
+
+  getScopeToolsInfo(scopeName: ScopeName) {
+    const scope = this.availableScopes.get(scopeName);
+    if (!scope) return undefined;
+
+    return {
+      scope: scopeName,
+      tools: scope.tools.map((tool) => ({
+        name: tool.name,
+        description: tool.description || '',
+        inputSchema: tool.inputSchema,
+      })),
+    };
+  }
+
+  getAllScopesInfo() {
+    return Array.from(this.availableScopes.values()).map((scope) => ({
+      scope: scope.name,
+      serverInfo: scope.serverInfo,
+      instructions: scope.instructions,
+      tools: scope.tools.map((tool) => ({
+        name: tool.name,
+        description: tool.description || '',
+      })),
+    }));
   }
 }

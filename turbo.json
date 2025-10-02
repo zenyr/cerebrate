@@ -4,14 +4,8 @@
     "lint": {},
     "type-check": {},
     "dev": {
-      "dependsOn": ["^build"]
-    },
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
-    },
-    "start": {
-      "dependsOn": ["build"]
+      "cache": false,
+      "persistent": true
     }
   }
 }
