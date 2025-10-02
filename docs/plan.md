@@ -44,19 +44,28 @@
 
 ```
 packages/
+  @cerebrate/cli/          # ✨ CLI 진입점 (cerebrate 명령어)
+    - server, http-server, tui 명령어 지원
   @cerebrate/core/         # 공통 로직
     - protocol/            # MCP 타입, capability 감지
     - registry/            # ToolRegistry, enableTools 로직
     - auth/                # 인증코드 생성/검증
   @cerebrate/client/       # MCP 클라이언트 (하위 서버 연결)
-  @cerebrate/server/       # MCP 서버 (AI 앱 대응)
+  @cerebrate/server/       # MCP 서버 (AI 앱 대응, HTTP/SSE 지원)
+    - /mcp: Streamable HTTP 엔드포인트 (예정)
+    - /sse: SSE 엔드포인트
   @cerebrate/tui/          # 터미널 UI (툴 모니터링/제어)
-  @cerebrate/config/       # 공통 tsconfig/eslint
+  @cerebrate/config/       # 공통 tsconfig/eslint (ESLint .js로 변경)
 ```
 
 #### 5. **기술적 세부사항**
 
-- **프로토콜 지원**: stdio와 Hono 기반 streaming-http 지원. streaming-http는 /mcp?key={something} 형태로 key 필요, .env에 선언, NODE_ENV=test 제외 필수 존재 (없으면 서버 구동 실패)
+- **프로토콜 지원**:
+  - stdio: 기본 MCP 프로토콜
+  - HTTP: Hono 기반 엔드포인트 지원
+    - `/mcp`: Streamable HTTP 엔드포인트 (예정)
+    - `/sse`: SSE (Server-Sent Events) 엔드포인트
+- **CLI 진입점**: `@cerebrate/cli` 패키지로 `cerebrate server`, `cerebrate http-server` 명령어 지원
 - **타입 안정성**: MCP Tool은 `@modelcontextprotocol/sdk`의 `Tool` 타입 직접 사용
 - **클라이언트 감지**: `initialize` 핸드셰이크에서 `clientInfo.name`과 `protocolVersion`으로 동적 툴 업데이트 지원 여부 판단
 - **네임스페이싱**: 모든 활성화된 툴은 `{scope}/{toolName}` 형태로 제공

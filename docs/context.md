@@ -83,9 +83,9 @@ tools/list → [executeTool, listAvailableScopes]
 
 **적용 위치**: `@cerebrate/core/protocol/types.ts`에서 reexport
 
-### ADR-004: Streaming-HTTP Protocol Support
+### ADR-004: HTTP Protocol Support ✅ **구현 완료**
 
-**결정**: Hono 기반 streaming-http 프로토콜 추가 지원
+**결정**: Hono 기반 HTTP 프로토콜 지원 (Streamable HTTP + SSE)
 
 **컨텍스트**:
 
@@ -95,26 +95,34 @@ tools/list → [executeTool, listAvailableScopes]
 
 **결정 내용**:
 
-- stdio 외에 Hono 기반 streaming-http 프로토콜 지원
-- 엔드포인트: `/mcp?key={something}`
-- key는 .env에 `CEREBRATE_HTTP_KEY`로 선언
-- NODE_ENV가 'test'가 아니면 key 필수 존재 (없으면 서버 구동 실패)
+- stdio 외에 Hono 기반 HTTP 프로토콜 지원
+- 엔드포인트:
+  - `/mcp`: Streamable HTTP 엔드포인트 (현재 placeholder, 추후 구현)
+  - `/sse`: SSE (Server-Sent Events) 엔드포인트
+- `createHonoApp()` 메서드로 외부 Hono 앱 생성 지원
+- Bun.serve로 HTTP 서버 실행
 
 **근거**:
 
 - HTTP 기반으로 원격 MCP 클라이언트 지원 가능
-- key 기반 인증으로 보안 강화
+- SSE로 실시간 통신 지원
 - Hono의 경량성과 성능으로 효율적 구현
+- `createHonoApp()`으로 외부 통합 용이
 
 **트레이드오프**:
 
-- 장점: 확장성 증가, 원격 접속 가능
+- 장점: 확장성 증가, 원격 접속 가능, 실시간 통신 지원
 - 단점: 추가 복잡도 및 의존성 (Hono)
 
 ## 패키지 구조 (실용적 분할)
 
 ```
 packages/
+  @cerebrate/cli/            # ✨ CLI 진입점 (새로 추가)
+    src/
+      index.ts               # cerebrate 명령어 구현
+    package.json             # bin: "cerebrate": "src/index.ts"
+
   @cerebrate/core/           # 공통 로직 통합
     src/
       protocol/              # MCP 타입 정의, capability 감지
@@ -122,14 +130,18 @@ packages/
         - capability-detector.ts
       registry/              # 툴 관리 로직
         - tool-registry.ts   # ToolRegistry 클래스
-        - core-tools.ts      # ENABLE_TOOLS, LIST_AVAILABLE_SCOPES
+        - core-tools.ts      # ENABLE_TOOLS, LIST_AVAILABLE_SCOPES, EXECUTE_TOOL
       auth/                  # 인증 로직
         - code-generator.ts  # ck-{nanoid} 생성/검증
 
   @cerebrate/client/         # MCP 클라이언트 (하위 서버 연결)
-  @cerebrate/server/         # MCP 서버 (AI 앱 대응)
+  @cerebrate/server/         # MCP 서버 (AI 앱 대응, HTTP/SSE 지원)
+    - /mcp: Streamable HTTP 엔드포인트 (placeholder)
+    - /sse: SSE 엔드포인트
+    - createHonoApp(): 외부 Hono 앱 생성
+
   @cerebrate/tui/            # 터미널 UI (모니터링/제어)
-  @cerebrate/config/         # 공유 tsconfig/eslint
+  @cerebrate/config/         # 공유 tsconfig/eslint (ESLint .js로 변경)
 ```
 
 **설계 원칙**:
@@ -187,17 +199,16 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 
 **위치**: `@cerebrate/core/registry/core-tools.ts`
 
-**EXECUTE_TOOL**:
+**EXECUTE_TOOL** (새로 추가):
 
 ```typescript
 {
   name: 'executeTool',
-  description: 'Execute a tool from any available MCP server scope. Use listAvailableScopes to discover available tools.',
+  description: 'Execute a tool by name from any available scope. Use this to run tools directly without activating scopes.',
   inputSchema: {
     properties: {
-      scope: { type: 'string' },  // MCP 서버 이름
-      tool: { type: 'string' },   // 실행할 툴 이름
-      arguments: { type: 'object' }  // 툴 인자
+      toolName: { type: 'string' },    // {scope}/{tool} 형식 (예: "filesystem/read_file")
+      arguments: { type: 'object' }    // 툴 인자
     }
   }
 }
@@ -354,11 +365,12 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 
 ### Phase 4: UI & DX
 
-- [ ] Hono 기반 streaming-http 프로토콜 지원 추가 (/mcp?key={something} 형태로 key 필요)
-- [ ] .env에서 streaming-http key 관리 및 검증 로직 구현 (NODE_ENV=test 제외 필수)
+- [x] Hono 기반 HTTP 프로토콜 지원 추가 (/mcp, /sse 엔드포인트)
+- [ ] Streamable HTTP 구현 (/mcp 엔드포인트 완성)
+- [ ] .env에서 HTTP key 관리 및 검증 로직 구현 (NODE_ENV=test 제외 필수)
 - [ ] TUI 구현 (활성화된 scope 모니터링)
+- [x] CLI 인터페이스 구현 (@cerebrate/cli 패키지)
 - [ ] 설정 파일 로더
-- [ ] CLI 인터페이스
 
 ## 미해결 질문 & 기술 선택
 
