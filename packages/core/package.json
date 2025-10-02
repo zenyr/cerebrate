@@ -1,0 +1,19 @@
+{
+  "name": "@cerebrate/core",
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    "./protocol": "./src/protocol/index.ts",
+    "./registry": "./src/registry/index.ts",
+    "./auth": "./src/auth/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cerebrate/config": "workspace:*",
+    "@types/bun": "^1.2.23",
+    "typescript": "^5.7.3"
+  }
+}

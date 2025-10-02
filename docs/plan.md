@@ -11,19 +11,43 @@
        --> (Cerebrate MCP 클라이언트) --(MCP 프로토콜)--> (기타 MCP 서버)
   ```
 
-#### 2. **라이프사이클**
+#### 2. **라이프사이클 및 툴 활성화 메커니즘**
 - **실행 단계**:
   1. Cerebrate 실행 시, 등록된 MCP 서버에 사전 접속하여 각 서버의 기능(툴, 리소스 등)을 파악.
   2. AI 앱이 Cerebrate에 MCP 클라이언트로 접속.
-  3. Cerebrate가 하위 MCP 서버의 툴을 선택적으로 제공 (활성화 툴로 노출).
-  4. 앱이 특정 툴을 요청하면, Cerebrate가 해당 툴을 활성화하여 업데이트된 목록 제공.
-  5. 앱이 툴 실행을 요청하면, Cerebrate가 프록시로 하위 MCP 서버에 호출하고 결과를 반환.
-- **전제 조건**: Cerebrate를 로컬 MCP 서버로 미리 실행해두어야 함. 서버는 클라이언트 접속 시 하위 MCP 기능들을 제한적으로 열어줍니다.
+  3. Cerebrate는 초기에 `enableTools`와 `listAvailableScopes` 두 툴만 노출.
+  4. LLM이 `enableTools({ scope: "filesystem" })`을 호출하면:
+     - Cerebrate가 해당 scope(예: filesystem)의 모든 툴을 활성화
+     - 클라이언트가 `notifications/tools/list_changed` 지원 시 알림 전송 → 클라이언트가 자동으로 새 툴 목록 조회
+     - 미지원 클라이언트는 재접속 필요 (응답 메시지로 안내)
+  5. 활성화된 툴은 `{scope}/{toolName}` 형태로 네임스페이스 적용 (예: `filesystem/read_file`)
+  6. LLM이 실제 툴 실행 요청 시, Cerebrate가 프록시로 하위 MCP 서버에 호출하고 결과 반환.
+- **전제 조건**: Cerebrate를 로컬 MCP 서버로 미리 실행해두어야 함.
+
+**툴 활성화 전략**:
+- **동적 노출**: 클라이언트가 MCP 표준 `notifications/tools/list_changed` 지원 시 즉시 툴 목록 업데이트
+- **Fallback**: 미지원 클라이언트는 초기에 모든 scope 툴을 노출 (lazy activation 내부 처리)하거나 재접속 안내
 
 #### 3. **보안 및 인증**
 - Cerebrate에 접속하려는 MCP 클라이언트 앱은 암호화된 SQLite 데이터베이스에 저장된 인증코드(`ck-{nanoid}` 형태)를 사용해야 합니다. 코드가 없으면 자동 생성하여 저장.
 
-#### 4. **향후 확장 아이디어**
-- API 호출 Reverse Proxy(MITM) 엔드포인트를 추가하여, 매직워드(특정 키워드)를 추출하고 관련 툴을 동적으로 추가하는 기능 고려.
+#### 4. **패키지 구조 (실용적 분할)**
+```
+packages/
+  @cerebrate/core/         # 공통 로직
+    - protocol/            # MCP 타입, capability 감지
+    - registry/            # ToolRegistry, enableTools 로직
+    - auth/                # 인증코드 생성/검증
+  @cerebrate/client/       # MCP 클라이언트 (하위 서버 연결)
+  @cerebrate/server/       # MCP 서버 (AI 앱 대응)
+  @cerebrate/tui/          # 터미널 UI (툴 모니터링/제어)
+  @cerebrate/config/       # 공통 tsconfig/eslint
+```
 
-이 요약은 원본 계획을 간결하게 재구성하여 가독성과 이해도를 높였습니다. 추가 질문이나 구현 관련 상담이 필요하시면 언제든 말씀해 주세요!
+#### 5. **기술적 세부사항**
+- **타입 안정성**: MCP Tool은 `MCPTool` 타입으로 명명 (AI SDK의 `Tool` 타입과 충돌 방지)
+- **클라이언트 감지**: `initialize` 핸드셰이크에서 `clientInfo.name`과 `protocolVersion`으로 동적 툴 업데이트 지원 여부 판단
+- **네임스페이싱**: 모든 활성화된 툴은 `{scope}/{toolName}` 형태로 제공
+
+#### 6. **향후 확장 아이디어**
+- API 호출 Reverse Proxy(MITM) 엔드포인트를 추가하여, 매직워드(특정 키워드)를 추출하고 관련 툴을 동적으로 추가하는 기능 고려.

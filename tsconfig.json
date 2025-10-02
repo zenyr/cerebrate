@@ -16,6 +16,13 @@
     "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "@cerebrate/core": ["./packages/core/src/index.ts"],
+      "@cerebrate/core/*": ["./packages/core/src/*"],
+      "@cerebrate/client": ["./packages/client/src/index.ts"],
+      "@cerebrate/server": ["./packages/server/src/index.ts"],
+      "@cerebrate/tui": ["./packages/tui/src/index.tsx"]
+    }
   }
 }

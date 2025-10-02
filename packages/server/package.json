@@ -1,0 +1,18 @@
+{
+  "name": "@cerebrate/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "bun run src/index.ts"
+  },
+  "devDependencies": {
+    "@cerebrate/config": "workspace:*",
+    "@types/bun": "^1.2.23",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@cerebrate/core": "workspace:*"
+  }
+}

@@ -1,21 +1,24 @@
-import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import importPlugin from 'eslint-plugin-import';
+import type { Linter } from 'eslint';
 
-export default [
-  js.configs.recommended,
-  ...tseslint.configs.recommended,
+const config: Linter.Config[] = [
   {
-    plugins: { import: importPlugin },
-    rules: {
-      'import/extensions': ['error', 'always', { ignorePackages: true }],
-      'import/no-relative-packages': 'error',
-    },
+    ignores: ['**/dist/**', '**/node_modules/**'],
   },
   {
-    files: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts', '**/*.spec.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
+    languageOptions: {
+      parser: await import('@typescript-eslint/parser'),
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
     rules: {
-      'import/no-relative-packages': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
     },
   },
 ];
+
+export default config;

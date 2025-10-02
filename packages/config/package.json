@@ -1,19 +1,15 @@
 {
   "name": "@cerebrate/config",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.0.1",
   "type": "module",
-  "main": "index.ts",
   "exports": {
-    ".": "./index.ts",
-    "./eslint": "./eslint.config.ts",
-    "./tsconfig": "./tsconfig.json"
+    "./tsconfig": "./tsconfig.json",
+    "./eslint": "./eslint.config.ts"
   },
+  "files": ["tsconfig.json", "eslint.config.ts"],
   "devDependencies": {
-    "@eslint/js": "^9.36.0",
+    "@types/bun": "^1.2.23",
     "eslint": "^9.36.0",
-    "eslint-plugin-import": "^2.32.0",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.45.0"
+    "typescript": "^5.7.3"
   }
 }

@@ -8,10 +8,11 @@
   "scripts": {
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
-    "update-deps": "bun update --latest && bun update --cwd packages/config --latest && bun update --cwd packages/tui --latest"
+    "cleanup": "rimraf node_modules; rimraf ./**/node_modules"
   },
   "devDependencies": {
     "@types/bun": "^1.2.23",
+    "rimraf": "^6.0.1",
     "turbo": "^2.5.8"
   }
 }

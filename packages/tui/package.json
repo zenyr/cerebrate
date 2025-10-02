@@ -15,6 +15,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@cerebrate/core": "workspace:*",
     "@opentui/core": "^0.1.25",
     "@opentui/react": "^0.1.25",
     "react": "^19.2.0"
