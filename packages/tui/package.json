@@ -1,0 +1,22 @@
+{
+  "name": "@cerebrate/tui",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.tsx",
+  "scripts": {
+    "lint": "eslint src/**/*.{ts,tsx}",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cerebrate/config": "workspace:*",
+    "@types/bun": "^1.2.23",
+    "eslint": "^9.36.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.1.25",
+    "@opentui/react": "^0.1.25",
+    "react": "^19.2.0"
+  }
+}
