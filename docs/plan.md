@@ -17,23 +17,23 @@
 - **실행 단계**:
   1. Cerebrate 실행 시, 등록된 MCP 서버에 사전 접속하여 각 서버의 기능(툴, 리소스 등)을 파악.
   2. AI 앱이 Cerebrate에 MCP 클라이언트로 접속.
-  3. Cerebrate는 초기에 `enableTools`와 `listAvailableScopes` 두 툴만 노출.
-  4. LLM의 툴 사용:
-     - `enableTools({ scope: "filesystem" })` 호출
-     - 응답: "filesystem/read_file, filesystem/write_file 등이 활성화됨"
-     - 지원 클라이언트: 알림 받고 `tools/list` 재호출 → `filesystem/read_file` 직접 호출
-     - 미지원 클라이언트: 응답 보고 `filesystem/read_file` 호출 시도 → Cerebrate가 프록시
-  5. 활성화된 툴은 `{scope}/{toolName}` 형태로 네임스페이스 적용 (예: `filesystem/read_file`)
-  6. LLM이 실제 툴 실행 요청 시, Cerebrate가 프록시로 하위 MCP 서버에 호출하고 결과 반환.
+  3. Cerebrate는 초기에 `executeTool`과 `listAvailableScopes` 두 툴만 노출.
+  4. initialize 완료 후 `notifications/tools/list_changed` 발송 → `enableTools`와 `listAvailableScopes`로 변경.
+  5. LLM의 툴 사용:
+     - 미지원 클라이언트: `executeTool({ scope: "filesystem", tool: "read_file", arguments: {...} })` 호출 → Cerebrate가 프록시
+     - 지원 클라이언트: `enableTools({ scope: "filesystem" })` 호출 → 동적 툴 추가 → `filesystem/read_file` 직접 호출
+  6. 활성화된 툴은 `{scope}/{toolName}` 형태로 네임스페이스 적용 (예: `filesystem/read_file`)
+  7. LLM이 실제 툴 실행 요청 시, Cerebrate가 프록시로 하위 MCP 서버에 호출하고 결과 반환.
 - **전제 조건**: Cerebrate를 로컬 MCP 서버로 미리 실행해두어야 함.
 
 **툴 활성화 전략**:
 
-- **단일 전략** (모든 클라이언트 동일):
-  - 초기: `[enableTools, listAvailableScopes]`
-  - `enableTools` 호출 → 무조건 `notifications/tools/list_changed` 발송 + 응답에 툴 목록 명시
-  - 지원 클라이언트: 알림 받고 `tools/list` 재호출 → 실제 툴 직접 호출 (타입 안전)
-  - 미지원 클라이언트: 응답 메시지 보고 `{scope}/{tool}` 형식으로 호출 → Cerebrate가 파싱하여 프록시
+- **이중 전략** (capability detection 기반):
+  - 초기: `[executeTool, listAvailableScopes]`
+  - initialize 완료 후: `notifications/tools/list_changed` 발송 → `[enableTools, listAvailableScopes]`
+  - 실질적 제공: `[executeTool, enableTools, listAvailableScopes, {동적-툴}]`
+  - 미지원 클라이언트: `executeTool(scope, tool, arguments)`로 간단 호출
+  - 지원 클라이언트: `enableTools(scope)` 후 동적 툴 직접 호출 (타입 안전)
 
 #### 3. **보안 및 인증**
 

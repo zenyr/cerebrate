@@ -11,52 +11,49 @@
 
 ### ADR-001: 동적 툴 활성화 메커니즘
 
-**결정**: `enableTools` 단일 전략 + 범용 프록시
+**결정**: `executeTool` + `enableTools` 이중 전략 + 범용 프록시
 
 **컨텍스트**:
 
 - 모든 하위 MCP 서버의 툴을 처음부터 노출하면 LLM 컨텍스트 낭비
 - 필요한 툴만 선택적으로 노출하는 메커니즘 필요
-- 클라이언트 capability 감지는 복잡도만 증가
+- 클라이언트 capability 감지를 통해 동적 툴 업데이트 지원 여부 구분
 
 **결정 내용**:
 
 ```typescript
 // 초기 상태 (모든 클라이언트 동일)
-tools/list → [enableTools, listAvailableScopes]
+tools/list → [executeTool, listAvailableScopes]
 
-// LLM이 scope 활성화
-enableTools({ scope: "filesystem" })
-→ ToolRegistry.activateScope("filesystem")
-→ notifications/tools/list_changed 발송 (지원하면 받을 것)
-→ 응답: "filesystem/read_file, filesystem/write_file 등이 활성화됨. {scope}/{tool} 형식으로 호출하세요"
+// initialize 완료 후
+→ notifications/tools/list_changed 발송
+→ tools/list → [enableTools, listAvailableScopes]
 
-// 지원 클라이언트: 알림 받고 tools/list 재호출
-→ [enableTools, listAvailableScopes, filesystem/read_file, ...]
+// 실질적으로 제공되는 툴: [executeTool, enableTools, listAvailableScopes, {동적-툴}]
+
+// 미지원 클라이언트 (동적 업데이트 무시): executeTool, listAvailableScopes만 인지
+→ listAvailableScopes 호출하여 scope 정보 획득
+→ executeTool({ scope: "filesystem", tool: "read_file", arguments: {...} }) 호출
+→ Cerebrate가 파싱하여 프록시
+
+// 지원 클라이언트 (동적 업데이트 수신): enableTools, listAvailableScopes, 동적-툴 인지
+→ enableTools({ scope: "filesystem" })
+→ notifications/tools/list_changed 발송
+→ tools/list → [enableTools, listAvailableScopes, filesystem/read_file, ...]
 → LLM이 filesystem/read_file 직접 호출 (타입 안전)
-
-// 미지원 클라이언트: 응답 메시지 보고 추측
-→ LLM이 filesystem/read_file 호출 시도
-→ tools/call로 들어옴 → Cerebrate가 파싱하여 프록시
 ```
 
 **근거**:
 
-- 단일 워크플로우: 모든 클라이언트가 같은 초기 경험
-- 자동 적응: 지원 클라이언트는 자동 업데이트, 미지원은 수동 추측 (둘 다 작동)
-- Capability detection 불필요: 복잡도 감소
-- 초기 2개 툴만 노출하여 컨텍스트 절약
+- Capability detection: list-changed 발송 후 툴 목록 변경으로 지원 여부 구분
+- 이중 워크플로우: 미지원 클라이언트는 executeTool로 간단 호출, 지원 클라이언트는 enableTools로 최적화
+- 컨텍스트 절약: 초기 2개 툴만 노출, 필요 시 확장
+- 범용 호환: 모든 클라이언트 지원
 
 **트레이드오프**:
 
-- 장점: 단순함, 모든 클라이언트 호환, 토큰 최적화
-- 단점: 미지원 클라이언트는 툴 이름 추측 필요 (응답에 명시적 안내로 완화)
-
-**대안 검토**:
-
-1. 이중 전략 (executeTool): capability 감지 복잡도 증가, 불필요
-2. Lazy Activation: 모든 툴 노출하되 내부적으로 lazy connect → 토큰 최적화 실패
-3. Static Exposure: 사전 설정된 툴만 노출 → 유연성 부족
+- 장점: 명확한 capability detection, 최적화된 워크플로우
+- 단점: 초기 list-changed 발송으로 약간의 복잡도 증가
 
 ### ADR-002: 네임스페이싱 전략
 
@@ -190,6 +187,22 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 
 **위치**: `@cerebrate/core/registry/core-tools.ts`
 
+**EXECUTE_TOOL**:
+
+```typescript
+{
+  name: 'executeTool',
+  description: 'Execute a tool from any available MCP server scope. Use listAvailableScopes to discover available tools.',
+  inputSchema: {
+    properties: {
+      scope: { type: 'string' },  // MCP 서버 이름
+      tool: { type: 'string' },   // 실행할 툴 이름
+      arguments: { type: 'object' }  // 툴 인자
+    }
+  }
+}
+```
+
 **ENABLE_TOOLS**:
 
 ```typescript
@@ -232,25 +245,27 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
    - 인증코드 검증 (ck-{nanoid})
 
 2. tools/list 요청
-   → [enableTools, listAvailableScopes]
+   → [executeTool, listAvailableScopes]
+
+3. initialize 완료 후
+   → notifications/tools/list_changed 발송
+   → tools/list → [enableTools, listAvailableScopes]
 ```
 
-### 3. LLM이 scope 활성화
+### 3. LLM이 툴 실행
 
 ```
-1. enableTools({ scope: "filesystem" })
-   - ToolRegistry.activateScope("filesystem")
-   - notifications/tools/list_changed 발송 (무조건)
-   - 응답: "Activated: filesystem/read_file, filesystem/write_file, ..."
+1a. 미지원 클라이언트 (동적 업데이트 무시)
+   - listAvailableScopes 호출하여 scope 정보 획득
+   - executeTool({ scope: "filesystem", tool: "read_file", arguments: {...} }) 호출
+   → Cerebrate가 파싱하여 프록시
 
-2a. 지원 클라이언트 (알림 수신)
-   - 자동으로 tools/list 재요청
-   → [enableTools, listAvailableScopes, filesystem/read_file, ...]
+1b. 지원 클라이언트 (동적 업데이트 수신)
+   - enableTools({ scope: "filesystem" })
+   → ToolRegistry.activateScope("filesystem")
+   → notifications/tools/list_changed 발송
+   → tools/list → [enableTools, listAvailableScopes, filesystem/read_file, ...]
    - LLM이 filesystem/read_file 직접 호출 (타입 안전)
-
-2b. 미지원 클라이언트 (알림 무시)
-   - 응답 메시지 읽고 filesystem/read_file 호출 시도
-   - tools/call 요청 → Cerebrate가 파싱하여 프록시
 ```
 
 ### 4. LLM이 실제 툴 실행
