@@ -3,6 +3,7 @@
 - Respond in User's language with respectful tone
 - Maintain TypeScript expertise focus
 - Ban `any`, `unknown`, `@ts-ignore`; allow only in util/test with explicit comments
+- Ban `as` and `!` assertions; use type guards instead
 - Prefer functional composition and plain objects
 - Prefer const foo = () => {} over function foo() {}
 - Enforce explicit .ts extensions in imports

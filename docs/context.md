@@ -288,11 +288,11 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
   - tools/call 핸들러 + 프록시
   - notifications/tools/list_changed 발송
 
-### Phase 3: Tool Handlers
+### Phase 3: Tool Handlers ✅ **완료**
 
-- [ ] enableTools 핸들러
-- [ ] listAvailableScopes 핸들러
-- [ ] 프록시 로직 (네임스페이스 파싱)
+- [x] enableTools 핸들러
+- [x] listAvailableScopes 핸들러
+- [x] 프록시 로직 (네임스페이스 파싱)
 
 ### Phase 4: UI & DX
 
