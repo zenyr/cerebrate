@@ -3,7 +3,10 @@ import {
   LIST_AVAILABLE_SCOPES,
   ToolRegistry,
   type ToolName,
+  type ScopeName,
+  type MCPServerConfig,
 } from "@cerebrate/core/registry";
+import { MCPClient } from "@cerebrate/client";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -15,6 +18,7 @@ import {
 export class MCPServer {
   private server: Server;
   private registry: ToolRegistry;
+  private clients = new Map<ScopeName, MCPClient>();
 
   constructor(registry: ToolRegistry) {
     this.registry = registry;
@@ -31,6 +35,19 @@ export class MCPServer {
     );
 
     this.setupHandlers();
+  }
+
+  private isValidParts(parts: string[]): parts is [string, string] {
+    return parts.length === 2;
+  }
+
+  private parseToolName(toolName: string): { scope: string; tool: string } | null {
+    const parts = toolName.split('/');
+    if (this.isValidParts(parts)) {
+      const [scope, tool] = parts;
+      return { scope, tool };
+    }
+    return null;
   }
 
   private setupHandlers(): void {
@@ -103,19 +120,36 @@ export class MCPServer {
       }
 
       // Handle namespaced tools
+      const parsed = this.parseToolName(name);
+      if (!parsed) {
+        throw new Error(`Invalid tool name format: ${name}`);
+      }
+      const { scope, tool } = parsed;
       const scopeInfo = this.registry.getScopeByToolName(name as ToolName);
       if (!scopeInfo) {
         throw new Error(`Tool '${name}' not found or scope not activated`);
       }
 
-      // TODO: Proxy to downstream MCP server
-      // For now, return mock response
-      return {
-        content: [{ type: "text", text: `Mock response for ${name}` }],
-      };
+      const client = this.clients.get(scope);
+      if (!client) {
+        throw new Error(`Client for scope '${scope}' not found`);
+      }
+
+      // Proxy to downstream MCP server
+      return await client.callTool(tool, args);
     });
 
     // TODO: Implement notifications
+  }
+
+  async loadScopes(configs: MCPServerConfig[]): Promise<void> {
+    for (const config of configs) {
+      const client = new MCPClient(config, this.registry);
+      await client.connect();
+      await client.registerScope(config.name);
+      this.clients.set(config.name, client);
+      // Keep client connected for proxying
+    }
   }
 
   async start(): Promise<void> {

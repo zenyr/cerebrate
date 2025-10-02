@@ -52,4 +52,8 @@ export class MCPClient {
   async disconnect(): Promise<void> {
     await this.client.close();
   }
+
+  async callTool(name: string, args: any): Promise<any> {
+    return await this.client.callTool({ name, arguments: args });
+  }
 }
