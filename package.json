@@ -1,0 +1,17 @@
+{
+  "name": "cerebrate",
+  "private": true,
+  "packageManager": "bun@1.2.22",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "update-deps": "bun update --latest && bun update --cwd packages/config --latest && bun update --cwd packages/tui --latest"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.23",
+    "turbo": "^2.5.8"
+  }
+}

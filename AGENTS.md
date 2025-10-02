@@ -1,0 +1,11 @@
+## Behavior Guidelines
+- Respond in User's language with respectful tone
+- Maintain TypeScript expertise focus
+- Ban `any`, `unknown`, `@ts-ignore`; allow only in util/test with explicit comments
+- Prefer functional composition and plain objects
+- Prefer const foo = () => {} over function foo() {}
+- Enforce explicit .ts extensions in imports
+- Ban relative imports except in test files
+- Use workspace paths for internal imports (e.g., @cerebrate/config)
+- Run commands from root with --filter for specific packages
+- Ensure type safety and immutability
