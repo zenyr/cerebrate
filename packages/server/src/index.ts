@@ -230,20 +230,57 @@ export class MCPServer {
       console.log("Cerebrate MCP server started (stdio)");
     } else {
       const app = new Hono();
+
+      // Streamable HTTP endpoint
+      app.post('/mcp', async (c) => {
+        // TODO: Implement streamable HTTP transport
+        // For now, return not implemented
+        return c.json({ error: 'Streamable HTTP not yet implemented' }, 501);
+      });
+
+      // SSE endpoint
       app.get('/sse', async (c) => {
         const transport = new SSEServerTransport(c.req.raw as any, c.res as any);
         await this.server.connect(transport);
-        return c.res; // or something
+        return c.res;
       });
+
       console.log(`Cerebrate MCP server started (http) on port ${port}`);
-      // Note: Hono serve is not standard, but assuming
-      // Actually, for Bun, use Bun.serve
-      // But since Hono, perhaps app.serve or something.
-      // For simplicity, assume it's handled.
+      console.log(`  - Streamable HTTP: http://localhost:${port}/mcp`);
+      console.log(`  - SSE: http://localhost:${port}/sse`);
+
+      // For Bun runtime
+      Bun.serve({
+        port,
+        fetch: app.fetch,
+      });
     }
   }
 
   async stop(): Promise<void> {
     await this.server.close();
+  }
+
+  // Create Hono app for external usage
+  createHonoApp(port = 3878): { fetch: (request: Request) => Response | Promise<Response>; port: number } {
+    const app = new Hono();
+
+    // Streamable HTTP endpoint
+    app.post('/mcp', async (c) => {
+      // TODO: Implement streamable HTTP transport
+      return c.json({ error: 'Streamable HTTP not yet implemented' }, 501);
+    });
+
+    // SSE endpoint
+    app.get('/sse', async (c) => {
+      const transport = new SSEServerTransport(c.req.raw as any, c.res as any);
+      await this.server.connect(transport);
+      return c.res;
+    });
+
+    return {
+      fetch: app.fetch,
+      port,
+    };
   }
 }
