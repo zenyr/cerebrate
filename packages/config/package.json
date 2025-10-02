@@ -4,14 +4,14 @@
   "type": "module",
   "exports": {
     "./tsconfig": "./tsconfig.json",
-    "./eslint": "./eslint.config.ts"
+    "./eslint": "./eslint.config.js"
   },
-  "files": ["tsconfig.json", "eslint.config.ts"],
-  "scripts": {
-    "type-check": "tsc --noEmit"
-  },
+  "files": ["tsconfig.json", "eslint.config.js"],
+  "scripts": {},
   "devDependencies": {
     "@types/bun": "^1.2.23",
+    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/parser": "^8.45.0",
     "eslint": "^9.36.0",
     "typescript": "^5.7.3"
   }
