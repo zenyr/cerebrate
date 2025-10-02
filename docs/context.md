@@ -227,6 +227,13 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 }
 ```
 
+**Resources 지원** (TypeScript MCP SDK 활용):
+- `resources/list`: `cerebrate://scopes` URI 반환 (사용 가능한 scope 목록)
+- `resources/read`:
+  - `cerebrate://scopes/{scope}`: 특정 scope의 툴 목록 및 기본 정보
+  - `cerebrate://scopes/{scope}/{tool}`: 특정 툴의 세부 사용법 및 설명
+- **구현 힌트**: `ResourceTemplate` 클래스로 URI 템플릿 정의 (예: `new ResourceTemplate("cerebrate://scopes/{scope}", { list: undefined })`), `server.registerResource`로 등록, 핸들러에서 `params.scope` 추출하여 동적 콘텐츠 해결.
+
 ## 실행 흐름 (Lifecycle)
 
 ### 1. Cerebrate 시작
@@ -247,7 +254,13 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 2. tools/list 요청
    → [executeTool, listAvailableScopes]
 
-3. initialize 완료 후
+3. resources/list 요청 (선택적)
+   → `cerebrate://scopes` URI 반환
+
+4. resources/read 요청 (선택적)
+   → `cerebrate://scopes/{scope}` 또는 `cerebrate://scopes/{scope}/{tool}`로 세부 정보 읽기
+
+5. initialize 완료 후
    → notifications/tools/list_changed 발송
    → tools/list → [enableTools, listAvailableScopes]
 ```

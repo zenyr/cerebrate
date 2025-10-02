@@ -18,12 +18,13 @@
   1. Cerebrate 실행 시, 등록된 MCP 서버에 사전 접속하여 각 서버의 기능(툴, 리소스 등)을 파악.
   2. AI 앱이 Cerebrate에 MCP 클라이언트로 접속.
   3. Cerebrate는 초기에 `executeTool`과 `listAvailableScopes` 두 툴만 노출.
-  4. initialize 완료 후 `notifications/tools/list_changed` 발송 → `enableTools`와 `listAvailableScopes`로 변경.
-  5. LLM의 툴 사용:
+  4. resources/list로 `cerebrate://scopes` URI 제공, resources/read로 `cerebrate://scopes/{scope}` 또는 `cerebrate://scopes/{scope}/{tool}`로 세부 정보 읽기 (tool 호출 대안).
+  5. initialize 완료 후 `notifications/tools/list_changed` 발송 → `enableTools`와 `listAvailableScopes`로 변경.
+  6. LLM의 툴 사용:
      - 미지원 클라이언트: `executeTool({ scope: "filesystem", tool: "read_file", arguments: {...} })` 호출 → Cerebrate가 프록시
      - 지원 클라이언트: `enableTools({ scope: "filesystem" })` 호출 → 동적 툴 추가 → `filesystem/read_file` 직접 호출
-  6. 활성화된 툴은 `{scope}/{toolName}` 형태로 네임스페이스 적용 (예: `filesystem/read_file`)
-  7. LLM이 실제 툴 실행 요청 시, Cerebrate가 프록시로 하위 MCP 서버에 호출하고 결과 반환.
+  7. 활성화된 툴은 `{scope}/{toolName}` 형태로 네임스페이스 적용 (예: `filesystem/read_file`)
+  8. LLM이 실제 툴 실행 요청 시, Cerebrate가 프록시로 하위 MCP 서버에 호출하고 결과 반환.
 - **전제 조건**: Cerebrate를 로컬 MCP 서버로 미리 실행해두어야 함.
 
 **툴 활성화 전략**:

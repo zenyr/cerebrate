@@ -14,6 +14,7 @@
 - Use English exclusively in coding tool calls to avoid language mixing
 - Omit inferred types in function declarations
 - Suppress follow-up questions in responses
+- Use git subagent for commit operations
 
 ## Workspace Import Guidelines
 
