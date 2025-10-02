@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@cerebrate/core": "workspace:*",
-    "@modelcontextprotocol/sdk": "^1.18.2"
+    "@modelcontextprotocol/sdk": "^1.18.2",
+    "hono": "^4.6.12"
   }
 }
