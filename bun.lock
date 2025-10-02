@@ -3,6 +3,9 @@
   "workspaces": {
     "": {
       "name": "react",
+      "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.18.2",
+      },
       "devDependencies": {
         "@types/bun": "^1.2.23",
         "rimraf": "^6.0.1",
@@ -14,6 +17,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@cerebrate/core": "workspace:*",
+        "@modelcontextprotocol/sdk": "^1.18.2",
       },
       "devDependencies": {
         "@cerebrate/config": "workspace:*",
@@ -48,6 +52,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@cerebrate/core": "workspace:*",
+        "@modelcontextprotocol/sdk": "^1.18.2",
       },
       "devDependencies": {
         "@cerebrate/config": "workspace:*",

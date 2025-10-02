@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "bun run src/index.ts"
+    "type-check": "tsc --noEmit"
   },
   "devDependencies": {
     "@cerebrate/config": "workspace:*",
@@ -13,6 +13,7 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
-    "@cerebrate/core": "workspace:*"
+    "@cerebrate/core": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.18.2"
   }
 }
