@@ -12,6 +12,23 @@
         "turbo": "^2.5.8",
       },
     },
+    "packages/cli": {
+      "name": "@cerebrate/cli",
+      "version": "0.0.0",
+      "bin": {
+        "cerebrate": "src/index.ts",
+      },
+      "dependencies": {
+        "@cerebrate/core": "workspace:*",
+        "@cerebrate/server": "workspace:*",
+        "@cerebrate/tui": "workspace:*",
+      },
+      "devDependencies": {
+        "@cerebrate/config": "workspace:*",
+        "@types/bun": "^1.2.23",
+        "typescript": "^5.7.3",
+      },
+    },
     "packages/client": {
       "name": "@cerebrate/client",
       "version": "0.0.0",
@@ -81,6 +98,8 @@
     },
   },
   "packages": {
+    "@cerebrate/cli": ["@cerebrate/cli@workspace:packages/cli"],
+
     "@cerebrate/client": ["@cerebrate/client@workspace:packages/client"],
 
     "@cerebrate/config": ["@cerebrate/config@workspace:packages/config"],

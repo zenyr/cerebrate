@@ -1,0 +1,7 @@
+{
+  "extends": "@cerebrate/config/tsconfig",
+  "compilerOptions": {
+    "rootDir": "src"
+  },
+  "include": ["src"]
+}

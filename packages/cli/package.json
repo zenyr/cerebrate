@@ -1,0 +1,22 @@
+{
+  "name": "@cerebrate/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "cerebrate": "src/index.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cerebrate/config": "workspace:*",
+    "@types/bun": "^1.2.23",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "@cerebrate/core": "workspace:*",
+    "@cerebrate/server": "workspace:*",
+    "@cerebrate/tui": "workspace:*"
+  }
+}
