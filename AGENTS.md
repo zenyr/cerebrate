@@ -9,3 +9,7 @@
 - Use workspace paths for internal imports (e.g., @cerebrate/config)
 - Run commands from root with --filter for specific packages
 - Ensure type safety and immutability
+- Suppress excessive comments
+- Use English exclusively in coding tool calls to avoid language mixing
+- Omit inferred types in function declarations
+- Suppress follow-up questions in responses
