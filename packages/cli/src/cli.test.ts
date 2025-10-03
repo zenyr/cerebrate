@@ -81,37 +81,54 @@ describe("CLI", () => {
       consoleSpy.mockRestore();
     });
 
-    it("should start HTTP server by default", async () => {
-      await runCli([], deps);
-      expect(deps.mockServer.start).toHaveBeenCalledWith("http", 3878);
-    });
+    it("should print usage when no subcommand", async () => {
+      const consoleSpy = spyOn(console, "log");
 
-    it("should start stdio server when --transport stdio", async () => {
-      await runCli(["--transport", "stdio"], deps);
-      expect(deps.mockServer.start).toHaveBeenCalledWith("stdio", 3878);
-    });
+      await runCli([]);
 
-    it("should start HTTP server with custom port", async () => {
-      await runCli(["--port", "3000"], deps);
-      expect(deps.mockServer.start).toHaveBeenCalledWith("http", 3000);
-    });
-
-    it("should start stdio server with custom port (ignored)", async () => {
-      const consoleSpy = spyOn(console, "warn");
-
-      await runCli(["--transport", "stdio", "--port", "3000"], deps);
-
-      expect(deps.mockServer.start).toHaveBeenCalledWith("stdio", 3878);
       expect(consoleSpy).toHaveBeenCalledWith(
-        "--port option is ignored with --transport stdio"
+        expect.stringContaining("Cerebrate MCP Server CLI")
       );
 
       consoleSpy.mockRestore();
     });
 
-    it("should throw error when --port is used with stdio", async () => {
-      // This test is kept for future if we decide to make it an error
-      expect(true).toBe(true);
+    it("should start HTTP server with http-server command", async () => {
+      await runCli(["http-server"], deps);
+      expect(deps.mockServer.start).toHaveBeenCalledWith("http", 3878);
+    });
+
+    it("should start stdio server with server command", async () => {
+      await runCli(["server"], deps);
+      expect(deps.mockServer.start).toHaveBeenCalledWith("stdio", 3878);
+    });
+
+    it("should start HTTP server with custom port", async () => {
+      await runCli(["http-server", "--port", "3000"], deps);
+      expect(deps.mockServer.start).toHaveBeenCalledWith("http", 3000);
+    });
+
+    it("should ignore port with server command", async () => {
+      const consoleSpy = spyOn(console, "warn");
+
+      await runCli(["server", "--port", "3000"], deps);
+
+      expect(deps.mockServer.start).toHaveBeenCalledWith("stdio", 3878);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "--port option is ignored with server command"
+      );
+
+      consoleSpy.mockRestore();
+    });
+
+    it("should handle tui command (not implemented)", async () => {
+      const consoleSpy = spyOn(console, "log");
+
+      await runCli(["tui"], deps);
+
+      expect(consoleSpy).toHaveBeenCalledWith("TUI not implemented yet");
+
+      consoleSpy.mockRestore();
     });
 
     it("should load config and call loadScopes when --config is provided", async () => {
@@ -137,7 +154,7 @@ describe("CLI", () => {
 
       const deps = { ToolRegistryClass, MCPServerClass, mockServer, loadConfig: mockLoadConfig };
 
-      await runCli(["--config", configPath], deps);
+      await runCli(["http-server", "--config", configPath], deps);
 
       expect(mockServer.loadScopes).toHaveBeenCalledWith([
         {
