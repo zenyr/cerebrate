@@ -1,12 +1,14 @@
 {
   "name": "@cerebrate/cli",
   "version": "0.0.0",
-  "private": true,
+  "private": false,
   "type": "module",
   "bin": {
-    "cerebrate": "src/index.ts"
+    "cerebrate": "bin/cerebrate"
   },
   "scripts": {
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "compile": "bun build --compile src/index.ts --outfile bin/cerebrate",
     "lint": "eslint src",
     "test": "bun test",
     "type-check": "tsc --noEmit"
