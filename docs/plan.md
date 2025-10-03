@@ -66,6 +66,7 @@ packages/
     - `/mcp`: Streamable HTTP 엔드포인트 (예정)
     - `/sse`: SSE (Server-Sent Events) 엔드포인트
 - **CLI 진입점**: `@cerebrate/cli` 패키지로 `cerebrate server`, `cerebrate http-server` 명령어 지원
+- **설정 파일**: JSON 형식으로 MCP 서버 설정 로드 (--config 옵션)
 - **타입 안정성**: MCP Tool은 `@modelcontextprotocol/sdk`의 `Tool` 타입 직접 사용
 - **클라이언트 감지**: `initialize` 핸드셰이크에서 `clientInfo.name`과 `protocolVersion`으로 동적 툴 업데이트 지원 여부 판단
 - **네임스페이싱**: 모든 활성화된 툴은 `{scope}/{toolName}` 형태로 제공

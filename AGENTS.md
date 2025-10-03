@@ -15,6 +15,7 @@
 - Omit inferred types in function declarations
 - Suppress follow-up questions in responses
 - Use git subagent for commit operations
+- Use `timeout` command for CLI/server testing to prevent infinite hangs
 
 ## Workspace Import Guidelines
 

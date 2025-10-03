@@ -370,7 +370,8 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 - [ ] .env에서 HTTP key 관리 및 검증 로직 구현 (NODE_ENV=test 제외 필수)
 - [ ] TUI 구현 (활성화된 scope 모니터링)
 - [x] CLI 인터페이스 구현 (@cerebrate/cli 패키지)
-- [ ] 설정 파일 로더
+- [x] 설정 파일 로더 (JSON 형식, --config 옵션 지원)
+- [ ] CLI 테스트에서 loadConfig mocking 구현 (현재 skip)
 
 ## 미해결 질문 & 기술 선택
 
@@ -384,10 +385,14 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
   - 전체 파일 암호화 대비 성능 우수 (시작/종료 오버헤드 없음)
   - 키 관리: 환경변수 `CEREBRATE_ENCRYPTION_KEY` (32 bytes hex)
 
-**Q2: MCP 서버 설정 파일 형식?**
+**Q2: MCP 서버 설정 파일 형식?** ✅ **해결**
 
-- 옵션: JSON, YAML, TypeScript config
-- 고려사항: 타입 안정성, 사용자 친화성
+- **결정**: JSON 형식
+- **근거**:
+  - Bun 네이티브 지원으로 별도 파서 불필요
+  - 타입 안정성: Zod 스키마로 검증
+  - 사용자 친화성: 간단한 구조로 설정 가능
+  - CLI --config 옵션으로 로드
 
 **Q3: Fallback 전략 채택?** ✅ **해결**
 
