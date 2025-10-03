@@ -387,12 +387,13 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 
 **Q2: MCP 서버 설정 파일 형식?** ✅ **해결**
 
-- **결정**: JSON 형식
+- **결정**: JSON5 형식 (기본 경로: `$HOME/.config/cerebrate/settings.json5`)
 - **근거**:
+  - JSON5: JSON 슈퍼셋으로 주석과 유연한 문법 지원
   - Bun 네이티브 지원으로 별도 파서 불필요
   - 타입 안정성: Zod 스키마로 검증
-  - 사용자 친화성: 간단한 구조로 설정 가능
-  - CLI --config 옵션으로 로드
+  - 사용자 친화성: 주석으로 설명 추가 가능
+  - CLI --config 옵션으로 로드, 기본값 자동 생성
 
 **Q3: Fallback 전략 채택?** ✅ **해결**
 

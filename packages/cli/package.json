@@ -17,6 +17,8 @@
   "dependencies": {
     "@cerebrate/core": "workspace:*",
     "@cerebrate/server": "workspace:*",
-    "@cerebrate/tui": "workspace:*"
+    "@cerebrate/tui": "workspace:*",
+    "json5": "^2.2.3",
+    "zod": "^4.1.11"
   }
 }

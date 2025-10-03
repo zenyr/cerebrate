@@ -213,10 +213,15 @@ export class MCPServer {
     // TODO: Implement notifications
   }
 
-  async loadScopes(configs: MCPServerConfig[]): Promise<void> {
+  async loadScopes(configs: MCPServerConfig[], timeout = 30000): Promise<void> {
     for (const config of configs) {
       const client = new MCPClient(config, this.registry);
-      await client.connect();
+      await Promise.race([
+        client.connect(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(`Connection timeout for ${config.name}`)), timeout)
+        ),
+      ]);
       await client.registerScope(config.name);
       this.clients.set(config.name, client);
       // Keep client connected for proxying

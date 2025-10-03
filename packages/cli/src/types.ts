@@ -1,9 +1,11 @@
-import { ToolRegistry } from '@cerebrate/core/registry';
-import { MCPServer } from '@cerebrate/server';
+import { ToolRegistry } from "@cerebrate/core/registry";
+import { MCPServer } from "@cerebrate/server";
+import z from "zod";
 
 export interface CliDeps {
   ToolRegistryClass?: typeof ToolRegistry;
   MCPServerClass?: typeof MCPServer;
+  loadConfig?: (configPath?: string) => Promise<CerebrateConfig>;
 }
 
 export type CliArgs = string[];
@@ -16,9 +18,40 @@ export interface MockServer {
   createHonoApp: (port: number) => any;
 }
 
+export const argsSchema = z.object({
+  help: z.boolean().optional(),
+  transport: z.enum(["stdio", "http"]).optional().default("http"),
+  port: z
+    .string()
+    .optional()
+    .refine((val) => val === undefined || /^\d+$/.test(val), {
+      message: "Port must be a valid number",
+    })
+    .transform((val) => (val ? parseInt(val, 10) : undefined))
+    .pipe(z.number().min(1).max(65535).optional()),
+  config: z.string().optional(),
+});
+
+// Configuration file schema for MCP servers
+export const configSchema = z.object({
+  mcp: z
+    .record(
+      z.string(),
+      z.object({
+        command: z.string(),
+        args: z.array(z.string()).optional(),
+        env: z.record(z.string(), z.string()).optional(),
+      })
+    )
+    .optional(),
+});
+
+export type CerebrateConfig = z.infer<typeof configSchema>;
+
 // For testing purposes
 export interface TestCliDeps {
-  ToolRegistryClass?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
-  MCPServerClass?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  ToolRegistryClass?: any;
+  MCPServerClass?: any;
   mockServer: MockServer;
+  loadConfig?: (configPath?: string) => Promise<CerebrateConfig>;
 }

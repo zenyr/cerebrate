@@ -3,10 +3,14 @@
   "version": "0.0.1",
   "type": "module",
   "exports": {
+    ".": "./src/index.ts",
     "./tsconfig": "./tsconfig.json",
     "./eslint": "./eslint.config.js"
   },
-  "files": ["tsconfig.json", "eslint.config.js"],
+  "files": [
+    "tsconfig.json",
+    "eslint.config.js"
+  ],
   "scripts": {},
   "devDependencies": {
     "@types/bun": "^1.2.23",
