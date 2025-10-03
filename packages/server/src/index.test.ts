@@ -30,7 +30,7 @@ test("MCPServer constructor initializes server and sets up handlers", () => {
   const server = new MCPServer(registry);
 
   expect(server).toBeDefined();
-  expect(mockServer.setRequestHandler).toHaveBeenCalledTimes(3); // initialize, listTools, callTool
+   expect(mockServer.setRequestHandler).toHaveBeenCalledTimes(5); // initialize, listTools, callTool, listResources, readResource
 });
 
 test("MCPServer start calls server.connect", async () => {

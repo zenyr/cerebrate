@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { ENABLE_TOOLS, LIST_AVAILABLE_SCOPES, CORE_TOOLS } from './core-tools';
+import { ENABLE_TOOLS, LIST_AVAILABLE_SCOPES, EXECUTE_TOOL, CORE_TOOLS } from './core-tools';
 
 describe('core-tools', () => {
   describe('ENABLE_TOOLS', () => {
@@ -49,10 +49,11 @@ describe('core-tools', () => {
   });
 
   describe('CORE_TOOLS', () => {
-    test('should contain both core tools', () => {
-      expect(CORE_TOOLS).toHaveLength(2);
+    test('should contain all core tools', () => {
+      expect(CORE_TOOLS).toHaveLength(3);
       expect(CORE_TOOLS).toContain(ENABLE_TOOLS);
       expect(CORE_TOOLS).toContain(LIST_AVAILABLE_SCOPES);
+      expect(CORE_TOOLS).toContain(EXECUTE_TOOL);
     });
 
     test('should export tools in correct order', () => {
