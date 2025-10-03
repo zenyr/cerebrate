@@ -118,7 +118,7 @@ tools/list → [executeTool, listAvailableScopes]
 
 ```
 packages/
-  @cerebrate/cli/            # ✨ CLI 진입점 (새로 추가)
+   cerebrate/                 # ✨ CLI 진입점 (새로 추가)
     src/
       index.ts               # cerebrate 명령어 구현
     package.json             # bin: "cerebrate": "src/index.ts"
@@ -239,6 +239,7 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 ```
 
 **Resources 지원** (TypeScript MCP SDK 활용):
+
 - `resources/list`: `cerebrate://scopes` URI 반환 (사용 가능한 scope 목록)
 - `resources/read`:
   - `cerebrate://scopes/{scope}`: 특정 scope의 툴 목록 및 기본 정보
@@ -369,8 +370,8 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 - [ ] Streamable HTTP 구현 (/mcp 엔드포인트 완성)
 - [ ] .env에서 HTTP key 관리 및 검증 로직 구현 (NODE_ENV=test 제외 필수)
 - [ ] TUI 구현 (활성화된 scope 모니터링)
-- [x] CLI 인터페이스 구현 (@cerebrate/cli 패키지)
- - [x] 설정 파일 로더 (JSON5 형식, --config 옵션 지원)
+- [x] CLI 인터페이스 구현 (cerebrate 패키지)
+- [x] 설정 파일 로더 (JSON5 형식, --config 옵션 지원)
 - [ ] CLI 테스트에서 loadConfig mocking 구현 (현재 skip)
 
 ## 미해결 질문 & 기술 선택
