@@ -14,7 +14,7 @@
 - Use English exclusively in coding tool calls to avoid language mixing
 - Omit inferred types in function declarations
 - Suppress follow-up questions in responses
-- Use git subagent for commit operations
+- Commit only when explicitly instructed for current changes; use git subagent for commits
 - Use `timeout` command for CLI/server testing to prevent infinite hangs
 
 ## Workspace Import Guidelines
