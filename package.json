@@ -2,6 +2,7 @@
   "name": "cerebrate",
   "private": true,
   "type": "module",
+  "license": "MIT",
   "packageManager": "bun@1.2.22",
   "workspaces": [
     "packages/*",
