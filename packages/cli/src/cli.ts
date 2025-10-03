@@ -28,6 +28,7 @@ export const runCli = async (
   args: CliArgs,
   deps: CliDeps = {}
 ): Promise<void> => {
+  const { exit = (code?: number) => process.exit(code) } = deps;
   const parsedArgs = parseArgs({
     args,
     options: {
@@ -71,8 +72,15 @@ export const runCli = async (
       transport = "http";
       break;
     case "tui":
-      // TUI는 아직 구현되지 않음
-      console.log("TUI not implemented yet");
+      // Start TUI
+      const { spawn } = await import("child_process");
+      const tuiProcess = spawn("bun", ["run", "--filter", "@cerebrate/tui", "start"], {
+        stdio: "inherit",
+        cwd: process.cwd(),
+      });
+      tuiProcess.on("close", (code) => {
+        exit(code || 0);
+      });
       return;
     default:
       printUsage();

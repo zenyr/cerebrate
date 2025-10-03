@@ -121,14 +121,25 @@ describe("CLI", () => {
       consoleSpy.mockRestore();
     });
 
-    it("should handle tui command (not implemented)", async () => {
-      const consoleSpy = spyOn(console, "log");
+    it("should handle tui command", async () => {
+      // Mock child_process.spawn
+      const mockSpawn = spyOn(await import("child_process"), "spawn").mockReturnValue({
+        on: (event: string, callback: (code?: number) => void) => {
+          if (event === "close") callback(0);
+        },
+      } as any);
+
+      // Mock exit to prevent actual exit
+      deps.exit = () => {};
 
       await runCli(["tui"], deps);
 
-      expect(consoleSpy).toHaveBeenCalledWith("TUI not implemented yet");
+      expect(mockSpawn).toHaveBeenCalledWith("bun", ["run", "--filter", "@cerebrate/tui", "start"], {
+        stdio: "inherit",
+        cwd: process.cwd(),
+      });
 
-      consoleSpy.mockRestore();
+      mockSpawn.mockRestore();
     });
 
     it("should load config and call loadScopes when --config is provided", async () => {

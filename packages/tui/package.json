@@ -6,7 +6,8 @@
   "main": "src/index.tsx",
   "scripts": {
     "lint": "eslint src/",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "start": "bun run src/index.tsx"
   },
   "devDependencies": {
     "@cerebrate/config": "workspace:*",

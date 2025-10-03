@@ -6,6 +6,7 @@ export interface CliDeps {
   ToolRegistryClass?: typeof ToolRegistry;
   MCPServerClass?: typeof MCPServer;
   loadConfig?: (configPath?: string) => Promise<CerebrateConfig>;
+  exit?: (code?: number) => void;
 }
 
 export type CliArgs = string[];
@@ -46,9 +47,6 @@ export const configSchema = z.object({
 export type CerebrateConfig = z.infer<typeof configSchema>;
 
 // For testing purposes
-export interface TestCliDeps {
-  ToolRegistryClass?: typeof ToolRegistry;
-  MCPServerClass?: typeof MCPServer;
+export interface TestCliDeps extends CliDeps {
   mockServer: MCPServer;
-  loadConfig?: (configPath?: string) => Promise<CerebrateConfig>;
 }

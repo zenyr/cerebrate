@@ -18,6 +18,16 @@ import {
   ListToolsRequestSchema,
   ListResourcesRequestSchema,
   ReadResourceRequestSchema,
+  type CallToolRequest,
+  type InitializeRequest,
+  type ListToolsRequest,
+  type ListResourcesRequest,
+  type ReadResourceRequest,
+  type CallToolResult,
+  type InitializeResult,
+  type ListToolsResult,
+  type ListResourcesResult,
+  type ReadResourceResult,
 } from "@modelcontextprotocol/sdk/types.js";
 
 export class MCPServer {
@@ -25,6 +35,13 @@ export class MCPServer {
   private registry: ToolRegistry;
   private clients = new Map<ScopeName, MCPClient>();
   private initialized = false;
+
+  // Handler functions for HTTP transport
+  private initializeHandler!: (request: InitializeRequest) => Promise<InitializeResult>;
+  private listToolsHandler!: (request: ListToolsRequest) => Promise<ListToolsResult>;
+  private callToolHandler!: (request: CallToolRequest) => Promise<CallToolResult>;
+  private listResourcesHandler!: (request: ListResourcesRequest) => Promise<ListResourcesResult>;
+  private readResourceHandler!: (request: ReadResourceRequest) => Promise<ReadResourceResult>;
 
   constructor(registry: ToolRegistry) {
     this.registry = registry;
@@ -59,7 +76,7 @@ export class MCPServer {
 
   private setupHandlers(): void {
     // Initialize handler
-    this.server.setRequestHandler(InitializeRequestSchema, async (request) => {
+    this.initializeHandler = async (request) => {
       // TODO: Implement authentication check using ck-{nanoid}
       this.initialized = true;
 
@@ -74,10 +91,11 @@ export class MCPServer {
           version: "1.0.0",
         },
       };
-    });
+    };
+    this.server.setRequestHandler(InitializeRequestSchema, this.initializeHandler);
 
     // Tools list handler
-    this.server.setRequestHandler(ListToolsRequestSchema, async () => {
+    this.listToolsHandler = async () => {
       const exposedTools = this.registry.getExposedTools();
       const coreTools = this.initialized
         ? [ENABLE_TOOLS, LIST_AVAILABLE_SCOPES]
@@ -86,10 +104,11 @@ export class MCPServer {
       return {
         tools: [...coreTools, ...exposedTools],
       };
-    });
+    };
+    this.server.setRequestHandler(ListToolsRequestSchema, this.listToolsHandler);
 
     // Tools call handler
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    this.callToolHandler = async (request) => {
       const { name, arguments: args } = request.params;
 
       // Handle core tools
@@ -170,10 +189,11 @@ export class MCPServer {
 
       // Proxy to downstream MCP server
       return await client.callTool(tool, args);
-    });
+    };
+    this.server.setRequestHandler(CallToolRequestSchema, this.callToolHandler);
 
     // List resources handler
-    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
+    this.listResourcesHandler = async () => {
       const resources = this.registry.getAvailableScopeNames().map((scopeName) => ({
         uri: `cerebrate://scopes/${scopeName}`,
         name: `Scope: ${scopeName}`,
@@ -181,10 +201,11 @@ export class MCPServer {
         mimeType: 'application/json',
       }));
       return { resources };
-    });
+    };
+    this.server.setRequestHandler(ListResourcesRequestSchema, this.listResourcesHandler);
 
     // Read resource handler
-    this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
+    this.readResourceHandler = async (request) => {
       const uri = request.params.uri;
       const match = uri.match(/^cerebrate:\/\/scopes\/(.+)$/);
       if (!match || !match[1]) {
@@ -208,7 +229,8 @@ export class MCPServer {
           text: content,
         }],
       };
-    });
+    };
+    this.server.setRequestHandler(ReadResourceRequestSchema, this.readResourceHandler);
 
     // TODO: Implement notifications
   }
@@ -236,11 +258,58 @@ export class MCPServer {
     } else {
       const app = new Hono();
 
+      // HTTP Authentication middleware
+      const httpKey = Bun.env.CEREBRATE_HTTP_KEY;
+      if (Bun.env.NODE_ENV !== 'test' && !httpKey) {
+        throw new Error('CEREBRATE_HTTP_KEY environment variable is required for HTTP transport (except in test environment)');
+      }
+      app.use('/mcp', async (c, next) => {
+        if (Bun.env.NODE_ENV === 'test') {
+          return next();
+        }
+        const authHeader = c.req.header('Authorization');
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return c.json({ error: 'Missing or invalid Authorization header' }, 401);
+        }
+        const providedKey = authHeader.slice(7); // Remove 'Bearer '
+        if (providedKey !== httpKey) {
+          return c.json({ error: 'Invalid authentication key' }, 401);
+        }
+        return next();
+      });
+
       // Streamable HTTP endpoint
       app.post('/mcp', async (c) => {
-        // TODO: Implement streamable HTTP transport
-        // For now, return not implemented
-        return c.json({ error: 'Streamable HTTP not yet implemented' }, 501);
+        try {
+          const request = await c.req.json() as any; // JSON-RPC request
+
+          // Handle based on method
+          let result;
+          switch (request.method) {
+            case 'initialize':
+              result = await this.initializeHandler(request);
+              break;
+            case 'tools/list':
+              result = await this.listToolsHandler(request);
+              break;
+            case 'tools/call':
+              result = await this.callToolHandler(request);
+              break;
+            case 'resources/list':
+              result = await this.listResourcesHandler(request);
+              break;
+            case 'resources/read':
+              result = await this.readResourceHandler(request);
+              break;
+            default:
+              return c.json({ jsonrpc: '2.0', error: { code: -32601, message: 'Method not found' }, id: request.id }, 404);
+          }
+
+          return c.json({ jsonrpc: '2.0', result, id: request.id });
+        } catch (error) {
+          console.error('HTTP transport error:', error);
+          return c.json({ jsonrpc: '2.0', error: { code: -32603, message: error instanceof Error ? error.message : 'Internal error' }, id: null }, 500);
+        }
       });
 
       // SSE endpoint
@@ -270,10 +339,58 @@ export class MCPServer {
   createHonoApp(port = 3878): { fetch: (request: Request) => Response | Promise<Response>; port: number } {
     const app = new Hono();
 
+    // HTTP Authentication middleware
+    const httpKey = Bun.env.CEREBRATE_HTTP_KEY;
+    if (Bun.env.NODE_ENV !== 'test' && !httpKey) {
+      throw new Error('CEREBRATE_HTTP_KEY environment variable is required for HTTP transport (except in test environment)');
+    }
+    app.use('/mcp', async (c, next) => {
+      if (Bun.env.NODE_ENV === 'test') {
+        return next();
+      }
+      const authHeader = c.req.header('Authorization');
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return c.json({ error: 'Missing or invalid Authorization header' }, 401);
+      }
+      const providedKey = authHeader.slice(7); // Remove 'Bearer '
+      if (providedKey !== httpKey) {
+        return c.json({ error: 'Invalid authentication key' }, 401);
+      }
+      return next();
+    });
+
     // Streamable HTTP endpoint
     app.post('/mcp', async (c) => {
-      // TODO: Implement streamable HTTP transport
-      return c.json({ error: 'Streamable HTTP not yet implemented' }, 501);
+      try {
+        const request = await c.req.json() as any; // JSON-RPC request
+
+        // Handle based on method
+        let result;
+        switch (request.method) {
+          case 'initialize':
+            result = await this.initializeHandler(request);
+            break;
+          case 'tools/list':
+            result = await this.listToolsHandler(request);
+            break;
+          case 'tools/call':
+            result = await this.callToolHandler(request);
+            break;
+          case 'resources/list':
+            result = await this.listResourcesHandler(request);
+            break;
+          case 'resources/read':
+            result = await this.readResourceHandler(request);
+            break;
+          default:
+            return c.json({ jsonrpc: '2.0', error: { code: -32601, message: 'Method not found' }, id: request.id }, 404);
+        }
+
+        return c.json({ jsonrpc: '2.0', result, id: request.id });
+      } catch (error) {
+        console.error('HTTP transport error:', error);
+        return c.json({ jsonrpc: '2.0', error: { code: -32603, message: error instanceof Error ? error.message : 'Internal error' }, id: null }, 500);
+      }
     });
 
     // SSE endpoint
