@@ -51,5 +51,38 @@ test("MCPServer stop calls server.close", async () => {
   expect(mockServer.close).toHaveBeenCalled();
 });
 
+test("MCPServer loadScopes registers clients", async () => {
+  const registry = new ToolRegistry();
+
+  // Mock client
+  const mockClient = {
+    connect: mock(() => Promise.resolve()),
+    registerScope: mock(() => Promise.resolve()),
+  };
+
+  mock.module("@cerebrate/client", () => ({
+    MCPClient: mock(() => mockClient),
+  }));
+
+  const server = new MCPServer(registry);
+  const configs = [{ name: "test", command: "echo", args: ["test"] }];
+
+  await server.loadScopes(configs);
+
+  expect(mockClient.connect).toHaveBeenCalled();
+  expect(mockClient.registerScope).toHaveBeenCalledWith("test");
+});
+
+test("MCPServer createHonoApp returns app with fetch and port", () => {
+  const registry = new ToolRegistry();
+  const server = new MCPServer(registry);
+
+  const app = server.createHonoApp(3000);
+
+  expect(app).toHaveProperty("fetch");
+  expect(typeof app.fetch).toBe("function");
+  expect(app.port).toBe(3000);
+});
+
 // Note: Handler tests would require more complex mocking of the server internals
 // For now, we test the basic setup. Integration tests will cover full functionality.
