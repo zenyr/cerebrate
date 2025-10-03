@@ -117,13 +117,34 @@ tools/list → [executeTool, listAvailableScopes]
 ## 패키지 구조 (실용적 분할)
 
 ```
+clis/
+  entry/                     # cerebrate (메인 CLI 진입점, public)
+    src/
+      index.ts               # Wrapper (Bun 감지 + 실행 경로 선택)
+      native.ts              # Bun 직접 실행용 엔트리
+    dist/
+      index.js               # bin: cerebrate (Node.js)
+      native.js              # @cerebrate/cli 번들 (Bun, 1-2MB)
+    package.json
+      - devDependencies: { "@cerebrate/cli": "workspace:*" }
+      - optionalDependencies: { "@cerebrate/cli-{platform}": "0.1.0" }
+
+  darwin-arm64/              # @cerebrate/cli-darwin-arm64 (public)
+  darwin-x64/                # @cerebrate/cli-darwin-x64 (public)
+  linux-x64/                 # @cerebrate/cli-linux-x64 (public)
+  linux-arm64/               # @cerebrate/cli-linux-arm64 (public)
+  windows-x64/               # @cerebrate/cli-windows-x64 (public)
+    bin/cerebrate[.exe]      # 컴파일된 바이너리 (60MB)
+
 packages/
-   cerebrate/                 # ✨ CLI 진입점 (새로 추가)
+  cli/                       # @cerebrate/cli (소스코드, public)
     src/
       index.ts               # cerebrate 명령어 구현
-    package.json             # bin: "cerebrate": "src/index.ts"
+    package.json
+      - main: "src/index.ts"
+      - Bun 사용자를 위한 소스 배포
 
-  @cerebrate/core/           # 공통 로직 통합
+  core/                      # @cerebrate/core (공통 로직)
     src/
       protocol/              # MCP 타입 정의, capability 감지
         - types.ts           # MCPTool, InitializeParams 등
@@ -134,14 +155,14 @@ packages/
       auth/                  # 인증 로직
         - code-generator.ts  # ck-{nanoid} 생성/검증
 
-  @cerebrate/client/         # MCP 클라이언트 (하위 서버 연결)
-  @cerebrate/server/         # MCP 서버 (AI 앱 대응, HTTP/SSE 지원)
+  client/                    # @cerebrate/client (MCP 클라이언트)
+  server/                    # @cerebrate/server (MCP 서버, HTTP/SSE 지원)
     - /mcp: Streamable HTTP 엔드포인트 (placeholder)
     - /sse: SSE 엔드포인트
     - createHonoApp(): 외부 Hono 앱 생성
 
-  @cerebrate/tui/            # 터미널 UI (모니터링/제어)
-  @cerebrate/config/         # 공유 tsconfig/eslint (ESLint .js로 변경)
+  tui/                       # @cerebrate/tui (터미널 UI)
+  config/                    # @cerebrate/config (공유 tsconfig/eslint)
 ```
 
 **설계 원칙**:
@@ -150,6 +171,9 @@ packages/
 - client/server 분리로 각각 재사용 가능
 - tui는 독립적 모니터링 도구
 - config로 프로젝트 전체 일관성 유지
+- CLI entry: Bun-first with Compiled Fallback (상세: [docs/cli-entry.md](./cli-entry.md))
+  - `BUN=1`: Bun 네이티브 (dist/native.js, 1-2MB)
+  - 기본: 플랫폼별 바이너리 (60MB)
 
 ## 핵심 컴포넌트 API
 
@@ -373,6 +397,28 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 - [x] CLI 인터페이스 구현 (cerebrate 패키지)
 - [x] 설정 파일 로더 (JSON5 형식, --config 옵션 지원)
 - [ ] CLI 테스트에서 loadConfig mocking 구현 (현재 skip)
+
+### Phase 5: CLI Entry 리팩토링 (계획 중)
+
+- [ ] 디렉토리 구조 재구성
+  - [ ] `packages/cli` → `@cerebrate/cli` (소스코드, public)
+  - [ ] `clis/entry` 생성 (cerebrate 메인 패키지)
+  - [ ] `clis/{platform}` 생성 (@cerebrate/cli-{platform} 바이너리)
+- [ ] Entry 패키지 구현
+  - [ ] `src/index.ts`: Wrapper logic (Bun 감지 + 실행 경로 선택)
+  - [ ] `src/native.ts`: Bun 직접 실행용 엔트리
+  - [ ] 빌드 스크립트: `build:native` + `build:wrapper`
+- [ ] 플랫폼별 바이너리 패키지
+  - [ ] darwin-arm64, darwin-x64, linux-x64, linux-arm64, windows-x64
+  - [ ] `bun build --compile` 크로스 컴파일
+- [ ] 빌드 자동화
+  - [ ] `scripts/build-all-clis.sh`: 전체 빌드
+  - [ ] `scripts/publish-all.sh`: 순차 배포
+- [ ] 테스트 및 검증
+  - [ ] 로컬 테스트 (Bun/Node.js 양쪽)
+  - [ ] Dry-run 검증
+  - [ ] npm 배포
+- 참고: [docs/cli-entry.md](./cli-entry.md)
 
 ## 미해결 질문 & 기술 선택
 

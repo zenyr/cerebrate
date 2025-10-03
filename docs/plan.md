@@ -43,20 +43,36 @@
 #### 4. **패키지 구조 (실용적 분할)**
 
 ```
+clis/
+  entry/                   # cerebrate (메인 CLI 진입점, public)
+    - dist/index.js        # Wrapper (Bun 감지 + 실행 경로 선택)
+    - dist/native.js       # @cerebrate/cli 번들 (Bun 직접 실행)
+  darwin-arm64/            # @cerebrate/cli-darwin-arm64 (바이너리, public)
+  darwin-x64/              # @cerebrate/cli-darwin-x64 (바이너리, public)
+  linux-x64/               # @cerebrate/cli-linux-x64 (바이너리, public)
+  linux-arm64/             # @cerebrate/cli-linux-arm64 (바이너리, public)
+  windows-x64/             # @cerebrate/cli-windows-x64 (바이너리, public)
+
 packages/
-   cerebrate/               # ✨ CLI 진입점 (cerebrate 명령어)
+  cli/                     # @cerebrate/cli (소스코드, public)
     - server, http-server, tui 명령어 지원
-  @cerebrate/core/         # 공통 로직
+    - Bun 사용자를 위한 소스 배포
+  core/                    # @cerebrate/core (공통 로직)
     - protocol/            # MCP 타입, capability 감지
     - registry/            # ToolRegistry, enableTools 로직
     - auth/                # 인증코드 생성/검증
-  @cerebrate/client/       # MCP 클라이언트 (하위 서버 연결)
-  @cerebrate/server/       # MCP 서버 (AI 앱 대응, HTTP/SSE 지원)
+  client/                  # @cerebrate/client (MCP 클라이언트)
+  server/                  # @cerebrate/server (MCP 서버, HTTP/SSE 지원)
     - /mcp: Streamable HTTP 엔드포인트 (예정)
     - /sse: SSE 엔드포인트
-  @cerebrate/tui/          # 터미널 UI (툴 모니터링/제어)
-  @cerebrate/config/       # 공통 tsconfig/eslint (ESLint .js로 변경)
+  tui/                     # @cerebrate/tui (터미널 UI)
+  config/                  # @cerebrate/config (공통 tsconfig/eslint)
 ```
+
+**CLI Entry 전략**: Bun-first with Compiled Fallback
+- 환경변수 `BUN=1`: Bun 네이티브 실행 (dist/native.js, 1-2MB)
+- 기본값: 플랫폼별 컴파일된 바이너리 (60MB)
+- 상세: [docs/cli-entry.md](./cli-entry.md)
 
 #### 5. **기술적 세부사항**
 
