@@ -1,6 +1,8 @@
 import { Database } from 'bun:sqlite';
 import { encrypt, decrypt } from './crypto';
 import { validateAuthCode } from './code-generator';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 
 export type AuthCode = {
   code: string;
@@ -8,11 +10,28 @@ export type AuthCode = {
 };
 
 export class AuthStore {
-  private db: Database;
+  public db: Database;
 
-  constructor(dbPath: string = ':memory:') {
-    this.db = new Database(dbPath);
-    this.initializeSchema();
+  private constructor(db: Database) {
+    this.db = db;
+  }
+
+  static async create(dbPath?: string): Promise<AuthStore> {
+    const defaultPath = dbPath ?? join(Bun.env.HOME ?? '~', '.config', 'cerebrate', 'db.sqlite');
+    await AuthStore.ensureDirectory(defaultPath);
+    const db = new Database(defaultPath);
+    const store = new AuthStore(db);
+    store.initializeSchema();
+    return store;
+  }
+
+  private static async ensureDirectory(dbPath: string): Promise<void> {
+    const dir = join(dbPath, '..');
+    try {
+      await mkdir(dir, { recursive: true });
+    } catch {
+      // Directory might already exist, ignore
+    }
   }
 
   private initializeSchema = () => {

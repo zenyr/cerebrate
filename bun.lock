@@ -61,6 +61,7 @@
       "version": "0.0.1",
       "dependencies": {
         "@modelcontextprotocol/sdk": "^1.18.2",
+        "@sindresorhus/is": "^7.1.0",
         "nanoid": "^5.1.6",
       },
       "devDependencies": {
@@ -170,6 +171,8 @@
     "@opentui/core-win32-x64": ["@opentui/core-win32-x64@0.1.25", "", { "os": "win32", "cpu": "x64" }, "sha512-YXAMr6vO/AoPDHn3u46128EuOAE1Hz2GVlJMXxCm+AeMd9xzQdFOgml9qbjAq+ii5OXSyQG9wmRBeZQsWAniGA=="],
 
     "@opentui/react": ["@opentui/react@0.1.25", "", { "dependencies": { "@opentui/core": "0.1.25", "react-reconciler": "^0.32.0" }, "peerDependencies": { "react": ">=19.0.0" } }, "sha512-ObDUcSFg+y7pPQ/5mDwWdkR0ItV3oRJOyJXnsA3Rwx5iWPri8nhenkhjlFtPwx8yS0ApcD5KTzZqQq9GXdqJ1g=="],
+
+    "@sindresorhus/is": ["@sindresorhus/is@7.1.0", "", {}, "sha512-7F/yz2IphV39hiS2zB4QYVkivrptHHh0K8qJJd9HhuWSdvf8AN7NpebW3CcDZDBQsUPMoDKWsY2WWgW7bqOcfA=="],
 
     "@types/bun": ["@types/bun@1.2.23", "", { "dependencies": { "bun-types": "1.2.23" } }, "sha512-le8ueOY5b6VKYf19xT3McVbXqLqmxzPXHsQT/q9JHgikJ2X22wyTW3g3ohz2ZMnp7dod6aduIiq8A14Xyimm0A=="],
 

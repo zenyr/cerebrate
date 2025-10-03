@@ -44,14 +44,14 @@
 - Security: Localhost binding by default; use HOST=0.0.0.0 for network access (caution)
 
 #### Process Management and Hanging
-- **GUI Mode Process Hanging**: GUI mode starts a web server that keeps the server process running indefinitely. Use `timeout` to prevent hangs during testing: `timeout 30 bunx --bun @modelcontextprotocol/inspector node dist/index.js`
-- **Timeout Usage for CLI Control**: For CLI operations, use `timeout` to avoid indefinite waits: `timeout 10 bunx --bun @modelcontextprotocol/inspector --cli node dist/index.js --method tools/list`
-- **Preventing Hangs in Testing**: Always wrap inspector commands in `timeout` for automated tests or CI to prevent processes from hanging: `timeout 60 bunx --bun @modelcontextprotocol/inspector --cli https://example.com/sse --method tools/list`
+- **GUI Mode Process Hanging**: GUI mode starts a web server that keeps the server process running indefinitely. Use `timeout` to prevent hangs during testing: `timeout 5 bunx --bun @modelcontextprotocol/inspector node dist/index.js`
+- **Timeout Usage for CLI Control**: For CLI operations, use `timeout` to avoid indefinite waits: `timeout 5 bunx --bun @modelcontextprotocol/inspector --cli node dist/index.js --method tools/list`
+- **Preventing Hangs in Testing**: Always wrap inspector commands in `timeout` for automated tests or CI to prevent processes from hanging: `timeout 5 bunx --bun @modelcontextprotocol/inspector --cli https://example.com/sse --method tools/list`
 
 #### Cerebrate Project Scenarios
 - **CLI-Only Access**: For cerebrate server testing without GUI: `bunx --bun @modelcontextprotocol/inspector --cli node packages/server/dist/index.js --method tools/list`
-- **Process Management in Development**: Use timeout for quick checks: `timeout 15 bunx --bun @modelcontextprotocol/inspector --cli --config example-config.json --server cerebrate-server --method resources/list`
-- **Debugging Server Hangs**: Test with timeout to identify hanging endpoints: `timeout 30 bunx --bun @modelcontextprotocol/inspector --cli node packages/server/dist/index.js --method tools/call --tool-name list-files --tool-arg path="."`
+- **Process Management in Development**: Use timeout for quick checks: `timeout 5 bunx --bun @modelcontextprotocol/inspector --cli --config example-config.json --server cerebrate-server --method resources/list`
+- **Debugging Server Hangs**: Test with timeout to identify hanging endpoints: `timeout 5 bunx --bun @modelcontextprotocol/inspector --cli node packages/server/dist/index.js --method tools/call --tool-name list-files --tool-arg path="."`
 
 #### Notes
 - Auto-opens browser in GUI mode with auth token

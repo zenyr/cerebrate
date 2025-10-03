@@ -14,15 +14,15 @@ import {
   generateAuthCode, 
   validateAuthCode, 
   AuthStore,
-  generateEncryptionKey 
-} from '@cerebrate/core/auth';
 
-// Generate encryption key (do this once, store in env)
-const key = generateEncryptionKey();
-console.log('Add this to your .env:', key);
+// Create a new store with default file-based database at $HOME/.config/cerebrate/db.sqlite
+const store = await AuthStore.create();
 
-// Create auth store
-const store = new AuthStore('./cerebrate.db');
+// Or specify a custom file path for persistent storage
+const store = await AuthStore.create('./cerebrate.db');
+
+// Or use in-memory database for testing
+const store = await AuthStore.create(':memory:');
 
 // Generate and store new auth code
 const code = generateAuthCode();

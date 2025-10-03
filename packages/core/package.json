@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.18.2",
+    "@sindresorhus/is": "^7.1.0",
     "nanoid": "^5.1.6"
   }
 }
