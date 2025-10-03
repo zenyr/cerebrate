@@ -10,12 +10,16 @@ export const printUsage = (): void => {
 Cerebrate MCP Server CLI
 
 Usage:
-  cerebrate [--transport stdio|http] [--port <port>] [--config <config-file>]
+  cerebrate <command> [options]
+
+Commands:
+  server       Start MCP server with stdio transport
+  http-server  Start MCP server with HTTP transport
+  tui          Start terminal UI for monitoring
 
 Options:
-  --transport   Transport type: http (default) or stdio
   --port        Port for HTTP server (default: 3878)
-  --config      Path to configuration file (JSON)
+  --config      Path to configuration file (JSON5)
   --help        Show this help message
 `);
 };
@@ -24,33 +28,58 @@ export const runCli = async (
   args: CliArgs,
   deps: CliDeps = {}
 ): Promise<void> => {
-  const parsed = argsSchema.parse(
-    parseArgs({
-      args,
-      options: {
-        transport: { type: "string", default: "http" },
-        port: { type: "string" },
-        config: { type: "string" },
-        help: { type: "boolean" },
-      },
-    }).values
-  );
+  const parsedArgs = parseArgs({
+    args,
+    options: {
+      port: { type: "string" },
+      config: { type: "string" },
+      help: { type: "boolean" },
+    },
+    allowPositionals: true,
+  });
 
-  if (parsed.help) {
+  const parsed = argsSchema.parse({
+    subCommand: parsedArgs.positionals[0],
+    port: parsedArgs.values.port,
+    config: parsedArgs.values.config,
+    help: parsedArgs.values.help,
+    positionals: parsedArgs.positionals,
+  });
+
+  if (parsed.help || !parsed.subCommand) {
     printUsage();
     return;
   }
 
-  const { transport, port: parsedPort = PORT, config: configPath } = parsed;
+  const subCommand = parsed.subCommand;
+
+  const { port: parsedPort = PORT, config: configPath } = parsed;
   const actualConfigPath = configPath; // loadConfig will handle default
 
+  let transport: "stdio" | "http";
   let port = parsedPort;
-  if (transport === "stdio" && parsed.port !== undefined) {
-    console.warn("--port option is ignored with --transport stdio");
-    port = PORT;
-  }
 
-  // DI support
+  switch (subCommand) {
+    case "server":
+      transport = "stdio";
+      if (parsed.port !== undefined) {
+        console.warn("--port option is ignored with server command");
+        port = PORT;
+      }
+      break;
+    case "http-server":
+      transport = "http";
+      break;
+    case "tui":
+      // TUI는 아직 구현되지 않음
+      console.log("TUI not implemented yet");
+      return;
+    default:
+      printUsage();
+      return;
+   }
+
+   // DI support
   const { ToolRegistryClass = ToolRegistry, MCPServerClass = MCPServer } = deps;
 
   const registry = new ToolRegistryClass();
