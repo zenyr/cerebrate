@@ -398,27 +398,28 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 - [x] 설정 파일 로더 (JSON5 형식, --config 옵션 지원)
 - [ ] CLI 테스트에서 loadConfig mocking 구현 (현재 skip)
 
-### Phase 5: CLI Entry 리팩토링 (계획 중)
+### Phase 5: CLI Entry 리팩토링 ✅ **완료**
 
-- [ ] 디렉토리 구조 재구성
-  - [ ] `packages/cli` → `@cerebrate/cli` (소스코드, public)
-  - [ ] `clis/entry` 생성 (cerebrate 메인 패키지)
-  - [ ] `clis/{platform}` 생성 (@cerebrate/cli-{platform} 바이너리)
-- [ ] Entry 패키지 구현
-  - [ ] `src/index.ts`: Wrapper logic (Bun 감지 + 실행 경로 선택)
-  - [ ] `src/native.ts`: Bun 직접 실행용 엔트리
-  - [ ] 빌드 스크립트: `build:native` + `build:wrapper`
-- [ ] 플랫폼별 바이너리 패키지
-  - [ ] darwin-arm64, darwin-x64, linux-x64, linux-arm64, windows-x64
-  - [ ] `bun build --compile` 크로스 컴파일
-- [ ] 빌드 자동화
-  - [ ] `scripts/build-all-clis.sh`: 전체 빌드
-  - [ ] `scripts/publish-all.sh`: 순차 배포
-- [ ] 테스트 및 검증
-  - [ ] 로컬 테스트 (Bun/Node.js 양쪽)
-  - [ ] Dry-run 검증
-  - [ ] npm 배포
-- 참고: [docs/cli-entry.md](./cli-entry.md)
+- [x] 디렉토리 구조 재구성
+  - [x] `packages/cli` → `@cerebrate/cli` (소스코드, public)
+  - [x] `clis/entry` 생성 (cerebrate 메인 패키지)
+  - [x] `clis/{platform}` 생성 (@cerebrate/cli-{platform} 바이너리)
+- [x] Entry 패키지 구현
+  - [x] `src/index.ts`: Wrapper logic (Bun 감지 + 실행 경로 선택)
+  - [x] `src/native.ts`: Bun 직접 실행용 엔트리
+  - [x] 빌드 스크립트: `build:native` + `build:wrapper`
+- [x] 플랫폼별 바이너리 패키지
+  - [x] darwin-arm64, darwin-x64, linux-x64, linux-arm64, windows-x64
+  - [x] `bun build --compile` 크로스 컴파일
+- [x] 빌드 자동화
+  - [x] `scripts/build-all-clis.sh`: 전체 빌드
+  - [ ] `scripts/publish-all.sh`: 순차 배포 (미구현)
+- [x] 테스트 및 검증
+  - [x] 로컬 테스트 (Bun/Node.js 양쪽)
+  - [x] 컴파일된 바이너리 실행 검증
+  - [x] HTTP 서버 실제 구동 확인
+  - [ ] npm 배포 (미배포)
+- 참고: [docs/cli-entry.md](./cli-entry.md), [docs/bun-compile.md](./bun-compile.md)
 
 ## 미해결 질문 & 기술 선택
 
