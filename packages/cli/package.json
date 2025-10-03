@@ -30,7 +30,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/zenyr/cerebrate.git",
+    "url": "git+https://github.com/zenyr/cerebrate.git",
     "directory": "packages/cli"
   },
   "engines": {
