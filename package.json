@@ -1,6 +1,7 @@
 {
   "name": "cerebrate",
   "private": true,
+  "type": "module",
   "packageManager": "bun@1.2.22",
   "workspaces": [
     "packages/*",
@@ -14,10 +15,15 @@
     "test": "bun test --coverage",
     "test:ci": "turbo run test",
     "type-check": "turbo run type-check",
-    "cleanup": "rimraf './**/node_modules'; rimraf node_modules"
+    "cleanup": "rimraf './**/node_modules'; rimraf node_modules",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.1.0",
+    "@commitlint/config-conventional": "^20.0.0",
     "@types/bun": "^1.2.23",
+    "husky": "^9.1.7",
+    "prettier": "^3.6.2",
     "rimraf": "^6.0.1",
     "turbo": "^2.5.8"
   },
