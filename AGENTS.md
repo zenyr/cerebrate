@@ -15,6 +15,7 @@
 - Omit inferred types in function declarations
 - Suppress follow-up questions in responses
 - Commit only when explicitly instructed for current changes; use git subagent for commits
+- Never commit without explicit user instruction (e.g., "커밋해줘"); git subagent is exception as it handles commit process directly
 - Use `timeout` command for CLI/server testing to prevent infinite hangs
 
 ## Workspace Import Guidelines

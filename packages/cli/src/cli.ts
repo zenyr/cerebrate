@@ -1,9 +1,9 @@
+import { PORT } from "@cerebrate/config";
 import { ToolRegistry, type MCPServerConfig } from "@cerebrate/core/registry";
 import { MCPServer } from "@cerebrate/server";
-import { argsSchema, type CliArgs, type CliDeps } from "./types";
 import { parseArgs } from "node:util";
-import { PORT } from "@cerebrate/config";
 import { loadConfig } from "./config";
+import { argsSchema, type CliArgs, type CliDeps } from "./types";
 
 export const printUsage = (): void => {
   console.log(`
@@ -60,10 +60,12 @@ export const runCli = async (
   const loadConfigFn = deps.loadConfig || loadConfig;
   const config = await loadConfigFn(actualConfigPath);
 
-  const configs: MCPServerConfig[] = Object.entries(config.mcp || {}).map(([name, serverConfig]) => ({
-    name,
-    ...serverConfig,
-  }));
+  const configs: MCPServerConfig[] = Object.entries(config.mcp || {}).map(
+    ([name, serverConfig]) => ({
+      name,
+      ...serverConfig,
+    })
+  );
 
   if (configs.length > 0) {
     await server.loadScopes(configs);

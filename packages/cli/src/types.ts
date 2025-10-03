@@ -10,14 +10,6 @@ export interface CliDeps {
 
 export type CliArgs = string[];
 
-export interface MockServer {
-  start: (transport?: string, port?: number) => Promise<void>;
-  stop: () => Promise<void>;
-  reset: () => void;
-  loadScopes: () => Promise<void>;
-  createHonoApp: (port: number) => { fetch: (request: Request) => Response | Promise<Response>; port: number };
-}
-
 export const argsSchema = z.object({
   help: z.boolean().optional(),
   transport: z.enum(["stdio", "http"]).optional().default("http"),
@@ -52,6 +44,6 @@ export type CerebrateConfig = z.infer<typeof configSchema>;
 export interface TestCliDeps {
   ToolRegistryClass?: typeof ToolRegistry;
   MCPServerClass?: typeof MCPServer;
-  mockServer: MockServer;
+  mockServer: MCPServer;
   loadConfig?: (configPath?: string) => Promise<CerebrateConfig>;
 }
