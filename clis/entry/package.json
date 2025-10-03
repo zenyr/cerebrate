@@ -1,0 +1,46 @@
+{
+  "name": "cerebrate",
+  "version": "0.1.0",
+  "description": "MCP server manager - works with or without Bun",
+  "private": false,
+  "type": "module",
+  "bin": {
+    "cerebrate": "./dist/index.js"
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build:native": "bun build src/native.ts --outfile dist/native.js --target bun --format esm",
+    "build:wrapper": "bun build src/index.ts --outfile dist/index.js --target node --format esm",
+    "build": "bun run build:native && bun run build:wrapper",
+    "prepublishOnly": "bun run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "cli",
+    "bun"
+  ],
+  "author": "zenyr",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zenyr/cerebrate.git",
+    "directory": "clis/entry"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "bun": ">=1.2.21"
+  },
+  "optionalDependencies": {
+    "@cerebrate/cli-darwin-arm64": "0.1.0",
+    "@cerebrate/cli-darwin-x64": "0.1.0",
+    "@cerebrate/cli-linux-x64": "0.1.0",
+    "@cerebrate/cli-linux-arm64": "0.1.0",
+    "@cerebrate/cli-windows-x64": "0.1.0"
+  },
+  "devDependencies": {
+    "@cerebrate/cli": "workspace:*"
+  }
+}

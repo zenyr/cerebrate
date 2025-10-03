@@ -3,9 +3,13 @@
   "private": true,
   "packageManager": "bun@1.2.22",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "clis/*"
   ],
   "scripts": {
+    "build:clis": "./scripts/build-all-clis.sh",
+    "build:entry": "bun run --filter=cerebrate build",
+    "build:all": "bun run build:clis",
     "lint": "turbo run lint",
     "test": "bun test --coverage",
     "test:ci": "turbo run test",

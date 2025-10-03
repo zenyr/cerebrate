@@ -2,9 +2,9 @@
 import { runCli } from "./cli";
 import type { CliArgs } from "./types";
 
-const main = async (): Promise<void> => {
-  const args: CliArgs = process.argv.slice(2);
-  await runCli(args);
+export const main = async (args?: CliArgs): Promise<void> => {
+  const cliArgs = args ?? process.argv.slice(2);
+  await runCli(cliArgs);
 };
 
 if (import.meta.main) {

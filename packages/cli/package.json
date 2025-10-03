@@ -1,11 +1,18 @@
 {
-  "name": "cerebrate",
-  "version": "0.0.0",
+  "name": "@cerebrate/cli",
+  "version": "0.1.0",
+  "description": "Cerebrate CLI source code (for Bun users)",
   "private": false,
   "type": "module",
-  "bin": {
-    "cerebrate": "bin/cerebrate"
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./src/*": "./src/*"
   },
+  "files": [
+    "src/",
+    "package.json"
+  ],
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target bun",
     "compile": "bun build --compile src/index.ts --outfile bin/cerebrate",
@@ -13,17 +20,33 @@
     "test": "bun test",
     "type-check": "tsc --noEmit"
   },
-  "devDependencies": {
-    "@cerebrate/config": "workspace:*",
-    "@types/bun": "^1.2.23",
-    "typescript": "^5.7.3"
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "cli",
+    "bun"
+  ],
+  "author": "zenyr",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zenyr/cerebrate.git",
+    "directory": "packages/cli"
+  },
+  "engines": {
+    "bun": ">=1.2.0"
   },
   "dependencies": {
-    "eslint": "^9.36.0",
     "@cerebrate/core": "workspace:*",
     "@cerebrate/server": "workspace:*",
     "@cerebrate/tui": "workspace:*",
     "json5": "^2.2.3",
     "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@cerebrate/config": "workspace:*",
+    "@types/bun": "^1.2.23",
+    "eslint": "^9.36.0",
+    "typescript": "^5.7.3"
   }
 }

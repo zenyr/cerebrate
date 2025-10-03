@@ -12,23 +12,57 @@
         "turbo": "^2.5.8",
       },
     },
+    "clis/darwin-arm64": {
+      "name": "@cerebrate/cli-darwin-arm64",
+      "version": "0.1.0",
+    },
+    "clis/darwin-x64": {
+      "name": "@cerebrate/cli-darwin-x64",
+      "version": "0.1.0",
+    },
+    "clis/entry": {
+      "name": "cerebrate",
+      "version": "0.1.0",
+      "bin": {
+        "cerebrate": "./dist/index.js",
+      },
+      "devDependencies": {
+        "@cerebrate/cli": "workspace:*",
+      },
+      "optionalDependencies": {
+        "@cerebrate/cli-darwin-arm64": "0.1.0",
+        "@cerebrate/cli-darwin-x64": "0.1.0",
+        "@cerebrate/cli-linux-arm64": "0.1.0",
+        "@cerebrate/cli-linux-x64": "0.1.0",
+        "@cerebrate/cli-windows-x64": "0.1.0",
+      },
+    },
+    "clis/linux-arm64": {
+      "name": "@cerebrate/cli-linux-arm64",
+      "version": "0.1.0",
+    },
+    "clis/linux-x64": {
+      "name": "@cerebrate/cli-linux-x64",
+      "version": "0.1.0",
+    },
+    "clis/windows-x64": {
+      "name": "@cerebrate/cli-windows-x64",
+      "version": "0.1.0",
+    },
     "packages/cli": {
       "name": "@cerebrate/cli",
-      "version": "0.0.0",
-      "bin": {
-        "cerebrate": "src/index.ts",
-      },
+      "version": "0.1.0",
       "dependencies": {
         "@cerebrate/core": "workspace:*",
         "@cerebrate/server": "workspace:*",
         "@cerebrate/tui": "workspace:*",
-        "eslint": "^9.36.0",
         "json5": "^2.2.3",
         "zod": "^4.1.11",
       },
       "devDependencies": {
         "@cerebrate/config": "workspace:*",
         "@types/bun": "^1.2.23",
+        "eslint": "^9.36.0",
         "typescript": "^5.7.3",
       },
     },
@@ -103,6 +137,16 @@
   },
   "packages": {
     "@cerebrate/cli": ["@cerebrate/cli@workspace:packages/cli"],
+
+    "@cerebrate/cli-darwin-arm64": ["@cerebrate/cli-darwin-arm64@workspace:clis/darwin-arm64"],
+
+    "@cerebrate/cli-darwin-x64": ["@cerebrate/cli-darwin-x64@workspace:clis/darwin-x64"],
+
+    "@cerebrate/cli-linux-arm64": ["@cerebrate/cli-linux-arm64@workspace:clis/linux-arm64"],
+
+    "@cerebrate/cli-linux-x64": ["@cerebrate/cli-linux-x64@workspace:clis/linux-x64"],
+
+    "@cerebrate/cli-windows-x64": ["@cerebrate/cli-windows-x64@workspace:clis/windows-x64"],
 
     "@cerebrate/client": ["@cerebrate/client@workspace:packages/client"],
 
@@ -247,6 +291,8 @@
     "call-bound": ["call-bound@1.0.4", "", { "dependencies": { "call-bind-apply-helpers": "^1.0.2", "get-intrinsic": "^1.3.0" } }, "sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg=="],
 
     "callsites": ["callsites@3.1.0", "", {}, "sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ=="],
+
+    "cerebrate": ["cerebrate@workspace:clis/entry"],
 
     "chalk": ["chalk@4.1.2", "", { "dependencies": { "ansi-styles": "^4.1.0", "supports-color": "^7.1.0" } }, "sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA=="],
 

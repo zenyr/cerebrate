@@ -1,0 +1,15 @@
+{
+  "name": "@cerebrate/cli-linux-x64",
+  "version": "0.1.0",
+  "description": "Cerebrate CLI binary for Linux x64",
+  "private": false,
+  "os": ["linux"],
+  "cpu": ["x64"],
+  "files": ["bin/cerebrate"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zenyr/cerebrate.git",
+    "directory": "clis/linux-x64"
+  },
+  "license": "MIT"
+}
