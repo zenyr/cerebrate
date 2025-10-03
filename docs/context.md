@@ -370,7 +370,7 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 - [ ] .env에서 HTTP key 관리 및 검증 로직 구현 (NODE_ENV=test 제외 필수)
 - [ ] TUI 구현 (활성화된 scope 모니터링)
 - [x] CLI 인터페이스 구현 (@cerebrate/cli 패키지)
-- [x] 설정 파일 로더 (JSON 형식, --config 옵션 지원)
+ - [x] 설정 파일 로더 (JSON5 형식, --config 옵션 지원)
 - [ ] CLI 테스트에서 loadConfig mocking 구현 (현재 skip)
 
 ## 미해결 질문 & 기술 선택
@@ -400,11 +400,13 @@ parseToolName(toolName: string): { scope: string; tool: string } | null
 - 결정: 단일 전략 (capability detection 제거)
 - 근거: 단순함, 모든 클라이언트 자동 적응
 
-**Q4: TUI 프레임워크?**
+**Q4: TUI 프레임워크?** ✅ **해결**
 
-- 현재: @opentui/react
-- 대안: ink, blessed
-- 고려사항: React 친숙도, 기능
+- **결정**: @opentui/react 사용
+- **근거**:
+  - React 친숙도로 빠른 개발 가능
+  - 터미널 환경에서 React 컴포넌트 사용 지원
+  - ink, blessed 대비 간단한 API
 
 **Q5: Hono 핸들러와 MCP SDK 스펙 싱크를 위한 패키지?** ✅ **해결**
 
