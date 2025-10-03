@@ -3,6 +3,10 @@
   "tasks": {
     "lint": {},
     "type-check": {},
+    "test": {
+      "inputs": ["src/**/*", "package.json", "tsconfig.json"],
+      "outputs": []
+    },
     "dev": {
       "cache": false,
       "persistent": true
