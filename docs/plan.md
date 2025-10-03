@@ -88,6 +88,204 @@ packages/
 - **네임스페이싱**: 모든 활성화된 툴은 `{scope}/{toolName}` 형태로 제공
 - **테스트**: bun:test 전용 사용 (jest/vitest 금지), co-location 전략, 96%+ 커버리지 목표
 
-#### 6. **향후 확장 아이디어**
+#### 6. **개발 로드맵**
 
-- API 호출 Reverse Proxy(MITM) 엔드포인트를 추가하여, 매직워드(특정 키워드)를 추출하고 관련 툴을 동적으로 추가하는 기능 고려.
+현재 완료된 기능과 향후 계획:
+
+**✅ Phase 1-3: Core Infrastructure (완료)**
+- ToolRegistry, 인증 시스템, MCP Integration 완료
+- 커버리지: 99%+ (funcs), 100% (lines)
+
+**✅ Phase 5: CLI Distribution (완료)**
+- Bun-first 배포 전략 구현
+- 5개 플랫폼 크로스 컴파일 완료
+- 빌드 자동화 스크립트
+
+**🔄 Phase 4: UI & DX (진행 중)**
+- [x] Hono HTTP 프로토콜 기본 지원
+- [x] CLI 인터페이스 및 설정 로더
+- [ ] Streamable HTTP 완성 (`/mcp` 엔드포인트)
+- [ ] HTTP 인증 키 관리 (.env)
+- [ ] TUI 구현 (scope 모니터링)
+
+**📋 Phase 6: 배포 및 프로덕션 준비**
+
+*배포 자동화*
+- `scripts/publish-all.sh` 순차 배포 스크립트
+- GitHub Actions CI/CD 파이프라인
+  - 플랫폼별 빌드 매트릭스
+  - 자동 릴리즈 태깅 (semantic versioning)
+  - npm 배포 자동화
+
+*npm 패키지 배포*
+- `cerebrate` (메인, optionalDependencies 포함)
+- `@cerebrate/cli` (소스 패키지, Bun 사용자용)
+- `@cerebrate/cli-{platform}` (5개 바이너리)
+- 배포 후 설치 검증 (E2E 테스트)
+
+*프로덕션 강화*
+- 환경변수 검증 (CEREBRATE_ENCRYPTION_KEY 필수화)
+- 구조화된 에러 핸들링 (error codes)
+- 로깅 시스템 (`--verbose`, `--quiet` 옵션)
+
+**📋 Phase 7: 보안 강화**
+
+*HTTP 인증 완성*
+- `.env`에서 `CEREBRATE_HTTP_KEY` 관리
+- 인증 미들웨어 구현 (Authorization: Bearer)
+- Rate limiting (IP 기반, 분당 요청 수 제한)
+- NODE_ENV=test 환경에서는 인증 스킵
+
+*인증 코드 CLI 관리*
+```bash
+cerebrate auth list          # 등록된 클라이언트 목록
+cerebrate auth generate      # 새 인증 코드 생성
+cerebrate auth revoke <code> # 인증 코드 폐기
+cerebrate auth info <code>   # 코드 상세 정보 (생성일, 마지막 사용)
+```
+
+*감사 로그*
+- 툴 실행 이력 (timestamp, scope, tool, args, result)
+- 인증 실패 로그 (IP, timestamp, reason)
+- scope 활성화/비활성화 이력
+- SQLite 기반 로그 저장소 (선택적 retention 정책)
+
+**📋 Phase 8: 모니터링 및 디버깅**
+
+*TUI 완성 (@opentui/react)*
+- 실시간 대시보드
+  - 활성화된 scope 목록
+  - 연결된 클라이언트 (clientInfo.name, 접속 시간)
+  - 최근 툴 호출 로그 (실시간 스트림)
+- 통계 페이지
+  - 툴별 호출 빈도 (Top 10)
+  - 평균 실행 시간 (scope별)
+  - 성공/실패율
+- 키보드 단축키 (q: 종료, r: 새로고침, /: 검색)
+
+*디버그 모드*
+```bash
+cerebrate server --debug          # 상세 로그 출력
+cerebrate server --dump-protocol  # MCP 메시지 덤프 (JSON)
+cerebrate server --profile        # 성능 프로파일링
+```
+
+**📋 Phase 9: Streamable HTTP 완성**
+
+*`/mcp` 엔드포인트 구현*
+- Streamable HTTP 프로토콜 완전 구현
+- 청크 기반 스트리밍 응답 (Transfer-Encoding: chunked)
+- 타임아웃 처리 (idle timeout, request timeout)
+- 에러 복구 (reconnection logic)
+
+*HTTP Transport 테스트*
+- Integration test suite
+- MCP Inspector 호환성 검증
+- Claude Desktop, Continue 등 주요 클라이언트 테스트
+- 네트워크 지연/실패 시뮬레이션
+
+**📋 Phase 10: 확장 기능**
+
+*스마트 툴 추천*
+- LLM 대화 컨텍스트 분석 (키워드 추출)
+- 자동 scope 활성화 제안
+  - "파일을 읽고 싶어" → filesystem scope 제안
+  - "GitHub 이슈 생성" → github scope 제안
+- 사용 패턴 학습 (자주 함께 사용되는 scope 그룹화)
+
+*플러그인 시스템*
+```typescript
+// 커스텀 툴 등록 API
+cerebrate.registerPlugin({
+  name: 'my-custom-tool',
+  scope: 'custom',
+  tools: [...],
+  handler: async (tool, args) => { ... }
+});
+```
+- 외부 플러그인 로드 (`~/.config/cerebrate/plugins/`)
+- 플러그인 마켓플레이스 (장기 목표)
+
+*API Reverse Proxy (MITM)*
+- LLM API 호출 인터셉트 엔드포인트
+- 매직워드 추출 (정규식/LLM 기반)
+- 동적 툴 주입 (대화 중 실시간 툴 추가)
+- 사용 예시:
+  ```
+  User: "날씨 확인해줘"
+  → Cerebrate가 "날씨" 감지
+  → weather scope 자동 활성화
+  → LLM에게 weather/get_current 툴 제공
+  ```
+
+**📋 Phase 11: 사용자 경험 개선**
+
+*CLI UX*
+```bash
+cerebrate init              # Interactive 설정 마법사
+cerebrate doctor            # 환경 검증 (Bun 버전, 설정 파일, 권한)
+cerebrate completion bash   # 자동 완성 스크립트 출력
+cerebrate config validate   # 설정 파일 검증
+cerebrate config edit       # 기본 에디터로 설정 파일 열기
+```
+
+*문서화*
+- 사용자 가이드
+  - Quick Start (5분 안에 시작하기)
+  - 설정 파일 레퍼런스
+  - 트러블슈팅 FAQ
+- API 레퍼런스 (TypeDoc 자동 생성)
+- 예제 설정 모음
+  - filesystem + github 조합
+  - brave-search + filesystem
+  - 커스텀 MCP 서버 통합
+- 비디오 튜토리얼 (선택)
+
+*커뮤니티*
+- CONTRIBUTING.md (개발 환경 설정, PR 가이드)
+- Issue/PR 템플릿
+- Code of Conduct
+- 예제 프로젝트 showcase
+- Discord/GitHub Discussions
+
+**📋 Phase 12: 성능 최적화**
+
+*캐싱*
+- 툴 메타데이터 인메모리 캐싱 (TTL 기반)
+- 설정 파일 hot reload (파일 변경 감지)
+- MCP 클라이언트 커넥션 풀
+  - 재사용 가능한 stdio 프로세스 풀
+  - Lazy initialization (필요 시 연결)
+
+*벤치마크*
+- 툴 실행 성능 측정 (p50, p95, p99)
+- 메모리 사용량 프로파일링
+- 컴파일 바이너리 크기 최적화
+  - Tree-shaking 최적화
+  - 불필요한 의존성 제거
+  - 목표: 현재 60-115MB → 40-80MB
+
+*성능 목표*
+- 툴 프록시 오버헤드: <10ms (p95)
+- 메모리 사용: <100MB (idle), <500MB (active)
+- 시작 시간: <1초 (컴파일 바이너리), <100ms (Bun)
+
+---
+
+#### 7. **우선순위**
+
+**즉시 착수 (현재 필요)**
+1. Phase 4 미완료 (Streamable HTTP, HTTP 인증)
+2. Phase 6 배포 (실제 사용자 확보)
+
+**단기 (1-2주)**
+3. Phase 7 보안 (프로덕션 필수)
+4. Phase 8 모니터링 (TUI, 디버깅)
+
+**중기 (1-2개월)**
+5. Phase 9 HTTP 완성
+6. Phase 11 UX 개선
+
+**장기 (필요 시)**
+7. Phase 10 확장 기능
+8. Phase 12 최적화
