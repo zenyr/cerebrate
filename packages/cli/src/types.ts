@@ -10,9 +10,13 @@ export interface CliDeps {
 
 export type CliArgs = string[];
 
+export type SubCommand = "server" | "http-server" | "tui";
+
+export const subCommandSchema = z.enum(["server", "http-server", "tui"]);
+
 export const argsSchema = z.object({
+  subCommand: subCommandSchema.optional(),
   help: z.boolean().optional(),
-  transport: z.enum(["stdio", "http"]).optional().default("http"),
   port: z
     .string()
     .optional()
@@ -22,6 +26,7 @@ export const argsSchema = z.object({
     .transform((val) => (val ? parseInt(val, 10) : undefined))
     .pipe(z.number().min(1).max(65535).optional()),
   config: z.string().optional(),
+  positionals: z.array(z.string()),
 });
 
 // Configuration file schema for MCP servers
