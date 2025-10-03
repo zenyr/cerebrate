@@ -1,5 +1,5 @@
-import { ToolRegistry } from "@cerebrate/core/registry";
-import { MCPServer } from "@cerebrate/server";
+import type { ToolRegistry } from "@cerebrate/core/registry";
+import type { MCPServer } from "@cerebrate/server";
 import z from "zod";
 
 export interface CliDeps {
@@ -15,7 +15,7 @@ export interface MockServer {
   stop: () => Promise<void>;
   reset: () => void;
   loadScopes: () => Promise<void>;
-  createHonoApp: (port: number) => any;
+  createHonoApp: (port: number) => { fetch: (request: Request) => Response | Promise<Response>; port: number };
 }
 
 export const argsSchema = z.object({
@@ -50,8 +50,8 @@ export type CerebrateConfig = z.infer<typeof configSchema>;
 
 // For testing purposes
 export interface TestCliDeps {
-  ToolRegistryClass?: any;
-  MCPServerClass?: any;
+  ToolRegistryClass?: typeof ToolRegistry;
+  MCPServerClass?: typeof MCPServer;
   mockServer: MockServer;
   loadConfig?: (configPath?: string) => Promise<CerebrateConfig>;
 }

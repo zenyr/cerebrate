@@ -7,6 +7,7 @@
     "cerebrate": "src/index.ts"
   },
   "scripts": {
+    "lint": "eslint src",
     "type-check": "tsc --noEmit"
   },
   "devDependencies": {
@@ -15,6 +16,7 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
+    "eslint": "^9.36.0",
     "@cerebrate/core": "workspace:*",
     "@cerebrate/server": "workspace:*",
     "@cerebrate/tui": "workspace:*",
