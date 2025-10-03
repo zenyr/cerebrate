@@ -18,6 +18,15 @@
 - Never commit without explicit user instruction (e.g., "커밋해줘"); git subagent is exception as it handles commit process directly
 - Use `timeout` command for CLI/server testing to prevent infinite hangs
 
+## Lessons Learned
+
+- Use factory pattern for classes needing async initialization (e.g., `static async create()` instead of constructor with await)
+- Prefer Bun.env over process.env for Bun-specific env access
+- Use node:fs/promises for async file operations to avoid blocking
+- Employ @sindresorhus/is for type guards in tests to ensure runtime type safety
+- Replace non-null assertions (!) with proper type guards (e.g., `if (is.undefined(value)) throw`) to maintain strict type checking
+- Be aware of Array index access returning T | undefined in strict mode; use destructuring and guards
+
 ## Workspace Import Guidelines
 
 - Always use workspace paths (e.g., @cerebrate/core/registry) for internal imports
