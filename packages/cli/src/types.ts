@@ -26,7 +26,7 @@ export const argsSchema = z.object({
 
 // Configuration file schema for MCP servers
 export const configSchema = z.object({
-  mcp: z
+  mcpServers: z
     .record(
       z.string(),
       z.object({

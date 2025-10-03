@@ -60,7 +60,7 @@ export const runCli = async (
   const loadConfigFn = deps.loadConfig || loadConfig;
   const config = await loadConfigFn(actualConfigPath);
 
-  const configs: MCPServerConfig[] = Object.entries(config.mcp || {}).map(
+  const configs: MCPServerConfig[] = Object.entries(config.mcpServers || {}).map(
     ([name, serverConfig]) => ({
       name,
       ...serverConfig,

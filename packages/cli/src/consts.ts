@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import type { CerebrateConfig } from "./types";
 
-export const EMPTY_CONFIG = { mcp: {} } satisfies CerebrateConfig;
+export const EMPTY_CONFIG = { mcpServers: {} } satisfies CerebrateConfig;
 
 export const getDefaultConfigPath = (): string => {
   const home = Bun.env.HOME;

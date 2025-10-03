@@ -4,6 +4,7 @@ import { exists, mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { loadConfig } from "./config";
 import { EMPTY_CONFIG } from "./consts";
+import type { CerebrateConfig } from "./types";
 
 describe("Config", () => {
   const originalHome = process.env.HOME;
@@ -36,7 +37,7 @@ describe("Config", () => {
       // Create test config directory and file
       await mkdir(configDir, { recursive: true });
       const testConfig = {
-        mcp: { test: { command: "echo", args: ["hello"] } },
+        mcpServers: { test: { command: "echo", args: ["hello"] } },
       };
       await writeFile(configPath, JSON5.stringify(testConfig, null, 2));
 
@@ -63,7 +64,7 @@ describe("Config", () => {
       // Verify file was created
       expect(exists(configPath)).resolves.toBe(true);
       const content = await readFile(configPath, "utf-8");
-      expect(JSON5.parse(content) as any).toEqual(EMPTY_CONFIG);
+      expect(JSON5.parse(content) as CerebrateConfig).toEqual(EMPTY_CONFIG);
     });
 
     it("should throw error when config file not found and custom path provided", async () => {
@@ -99,10 +100,10 @@ describe("Config", () => {
       await mkdir(configDir, { recursive: true });
 
       const json5Config = {
-        mcp: { test1: { command: "echo", args: ["json5"] } },
+        mcpServers: { test1: { command: "echo", args: ["json5"] } },
       };
       const jsonConfig = {
-        mcp: { test2: { command: "echo", args: ["json"] } },
+        mcpServers: { test2: { command: "echo", args: ["json"] } },
       };
 
       await writeFile(json5Path, JSON5.stringify(json5Config, null, 2));
@@ -125,7 +126,7 @@ describe("Config", () => {
         await unlink(json5Path);
       }
 
-      const jsonConfig = { mcp: { test: { command: "echo", args: ["json"] } } };
+      const jsonConfig = { mcpServers: { test: { command: "echo", args: ["json"] } } };
       await writeFile(jsonPath, JSON.stringify(jsonConfig, null, 2));
 
       const result = await loadConfig();

@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it, spyOn } from "bun:test";
 import { printUsage, runCli } from "./cli";
 import { EMPTY_CONFIG } from "./consts";
-import { TestCliDeps } from "./types";
+import type { TestCliDeps } from "./types";
 
 beforeAll(() => {
   // Set HOME for testing
@@ -117,7 +117,7 @@ describe("CLI", () => {
     it("should load config and call loadScopes when --config is provided", async () => {
       const configPath = "/tmp/test-config.json5";
       const mockConfig = {
-        mcp: {
+        mcpServers: {
           testServer: {
             command: "echo",
             args: ["test"],
