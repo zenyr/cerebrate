@@ -1,6 +1,7 @@
 {
   "name": "cerebrate",
   "private": true,
+  "license": "MIT",
   "packageManager": "bun@1.2.22",
   "workspaces": [
     "packages/*",
