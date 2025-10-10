@@ -18,6 +18,7 @@
 - Never commit without explicit user instruction (e.g., "커밋해줘"); git subagent is exception as it handles commit process directly
 - Use `timeout` command for CLI/server testing to prevent infinite hangs
 - Enforce commitlint rules: subject ≤50 chars, scopes: cli|client|config|core|server|tui|docs|scripts|root, body required for feat|fix|refactor|perf
+- Be extremely concise. Sacrifice grammar for the sake of concision.
 
 ## Lessons Learned
 
