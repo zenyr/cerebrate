@@ -8,6 +8,7 @@ import {
   type MCPServerConfig,
 } from "@cerebrate/core/registry";
 import { MCPClient } from "@cerebrate/client";
+import { AuthStore } from "@cerebrate/core/auth";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
@@ -23,11 +24,13 @@ import {
 export class MCPServer {
   private server: Server;
   private registry: ToolRegistry;
+  private authStore?: AuthStore;
   private clients = new Map<ScopeName, MCPClient>();
   private initialized = false;
 
-  constructor(registry: ToolRegistry) {
+  constructor(registry: ToolRegistry, authStore?: AuthStore) {
     this.registry = registry;
+    this.authStore = authStore;
     this.server = new Server(
       {
         name: "cerebrate",
@@ -38,7 +41,7 @@ export class MCPServer {
           tools: {},
           resources: {},
         },
-      }
+      },
     );
 
     this.setupHandlers();
@@ -48,8 +51,10 @@ export class MCPServer {
     return parts.length === 2;
   }
 
-  private parseToolName(toolName: string): { scope: string; tool: string } | null {
-    const parts = toolName.split('/');
+  private parseToolName(
+    toolName: string,
+  ): { scope: string; tool: string } | null {
+    const parts = toolName.split("/");
     if (this.isValidParts(parts)) {
       const [scope, tool] = parts;
       return { scope, tool };
@@ -60,14 +65,27 @@ export class MCPServer {
   private setupHandlers(): void {
     // Initialize handler
     this.server.setRequestHandler(InitializeRequestSchema, async (request) => {
-      // TODO: Implement authentication check using ck-{nanoid}
+      // Authentication check (skip in test environment)
+      if (process.env.NODE_ENV !== "test") {
+        const code = (request.params as any).code as string;
+        if (!code) {
+          throw new Error("Authentication code required");
+        }
+        if (!this.authStore?.verify(code)) {
+          throw new Error("Invalid authentication code");
+        }
+      }
+
       this.initialized = true;
 
       return {
         protocolVersion: request.params.protocolVersion,
         capabilities: {
           tools: {},
-          // TODO: Add notifications capability if client supports it
+          resources: {},
+          ...(request.params.capabilities?.notifications
+            ? { notifications: {} }
+            : {}),
         },
         serverInfo: {
           name: "cerebrate",
@@ -121,7 +139,7 @@ export class MCPServer {
             (scope) =>
               `Scope: ${scope.scope}\nServer: ${scope.serverInfo.name} v${
                 scope.serverInfo.version
-              }\nTools: ${scope.tools.map((t) => t.name).join(", ")}\n`
+              }\nTools: ${scope.tools.map((t) => t.name).join(", ")}\n`,
           )
           .join("\n");
         return {
@@ -174,43 +192,52 @@ export class MCPServer {
 
     // List resources handler
     this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
-      const resources = this.registry.getAvailableScopeNames().map((scopeName) => ({
-        uri: `cerebrate://scopes/${scopeName}`,
-        name: `Scope: ${scopeName}`,
-        description: `Information about the ${scopeName} scope`,
-        mimeType: 'application/json',
-      }));
+      const resources = this.registry
+        .getAvailableScopeNames()
+        .map((scopeName) => ({
+          uri: `cerebrate://scopes/${scopeName}`,
+          name: `Scope: ${scopeName}`,
+          description: `Information about the ${scopeName} scope`,
+          mimeType: "application/json",
+        }));
       return { resources };
     });
 
     // Read resource handler
-    this.server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
-      const uri = request.params.uri;
-      const match = uri.match(/^cerebrate:\/\/scopes\/(.+)$/);
-      if (!match || !match[1]) {
-        throw new Error(`Invalid resource URI: ${uri}`);
-      }
-      const scopeName = match[1];
-      const scopeInfo = this.registry.getScopeInfo(scopeName);
-      if (!scopeInfo) {
-        throw new Error(`Scope '${scopeName}' not found`);
-      }
-      const content = JSON.stringify({
-        scope: scopeName,
-        serverInfo: scopeInfo.serverInfo,
-        instructions: scopeInfo.instructions,
-        tools: scopeInfo.tools,
-      }, null, 2);
-      return {
-        contents: [{
-          uri,
-          mimeType: 'application/json',
-          text: content,
-        }],
-      };
-    });
-
-    // TODO: Implement notifications
+    this.server.setRequestHandler(
+      ReadResourceRequestSchema,
+      async (request) => {
+        const uri = request.params.uri;
+        const match = uri.match(/^cerebrate:\/\/scopes\/(.+)$/);
+        if (!match || !match[1]) {
+          throw new Error(`Invalid resource URI: ${uri}`);
+        }
+        const scopeName = match[1];
+        const scopeInfo = this.registry.getScopeInfo(scopeName);
+        if (!scopeInfo) {
+          throw new Error(`Scope '${scopeName}' not found`);
+        }
+        const content = JSON.stringify(
+          {
+            scope: scopeName,
+            serverInfo: scopeInfo.serverInfo,
+            instructions: scopeInfo.instructions,
+            tools: scopeInfo.tools,
+          },
+          null,
+          2,
+        );
+        return {
+          contents: [
+            {
+              uri,
+              mimeType: "application/json",
+              text: content,
+            },
+          ],
+        };
+      },
+    );
   }
 
   async loadScopes(configs: MCPServerConfig[], timeout = 30000): Promise<void> {
@@ -219,7 +246,10 @@ export class MCPServer {
       await Promise.race([
         client.connect(),
         new Promise((_, reject) =>
-          setTimeout(() => reject(new Error(`Connection timeout for ${config.name}`)), timeout)
+          setTimeout(
+            () => reject(new Error(`Connection timeout for ${config.name}`)),
+            timeout,
+          ),
         ),
       ]);
       await client.registerScope(config.name);
@@ -228,24 +258,66 @@ export class MCPServer {
     }
   }
 
-  async start(transportType: 'stdio' | 'http' = 'stdio', port = 3878): Promise<void> {
-    if (transportType === 'stdio') {
+  async start(
+    transportType: "stdio" | "http" = "stdio",
+    port = 3878,
+  ): Promise<void> {
+    if (transportType === "http") {
+      // Validate HTTP key in production
+      if (process.env.NODE_ENV !== "test" && !process.env.CEREBRATE_HTTP_KEY) {
+        throw new Error(
+          "CEREBRATE_HTTP_KEY environment variable is required for HTTP transport",
+        );
+      }
+    }
+
+    if (transportType === "stdio") {
       const transport = new StdioServerTransport();
       await this.server.connect(transport);
       console.log("Cerebrate MCP server started (stdio)");
     } else {
       const app = new Hono();
 
+      // Auth middleware for HTTP endpoints
+      if (process.env.NODE_ENV !== "test") {
+        app.use("/mcp", async (c, next) => {
+          const authHeader = c.req.header("Authorization");
+          if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return c.json({ error: "Unauthorized" }, 401);
+          }
+          const token = authHeader.slice(7);
+          if (token !== process.env.CEREBRATE_HTTP_KEY) {
+            return c.json({ error: "Invalid token" }, 401);
+          }
+          await next();
+        });
+
+        app.use("/sse", async (c, next) => {
+          const authHeader = c.req.header("Authorization");
+          if (!authHeader || !authHeader.startsWith("Bearer ")) {
+            return c.json({ error: "Unauthorized" }, 401);
+          }
+          const token = authHeader.slice(7);
+          if (token !== process.env.CEREBRATE_HTTP_KEY) {
+            return c.json({ error: "Invalid token" }, 401);
+          }
+          await next();
+        });
+      }
+
       // Streamable HTTP endpoint
-      app.post('/mcp', async (c) => {
+      app.post("/mcp", async (c) => {
         // TODO: Implement streamable HTTP transport
         // For now, return not implemented
-        return c.json({ error: 'Streamable HTTP not yet implemented' }, 501);
+        return c.json({ error: "Streamable HTTP not yet implemented" }, 501);
       });
 
       // SSE endpoint
-      app.get('/sse', async (c) => {
-        const transport = new SSEServerTransport(c.req.raw as any, c.res as any);
+      app.get("/sse", async (c) => {
+        const transport = new SSEServerTransport(
+          c.req.raw as any,
+          c.res as any,
+        );
         await this.server.connect(transport);
         return c.res;
       });
@@ -267,17 +339,20 @@ export class MCPServer {
   }
 
   // Create Hono app for external usage
-  createHonoApp(port = 3878): { fetch: (request: Request) => Response | Promise<Response>; port: number } {
+  createHonoApp(port = 3878): {
+    fetch: (request: Request) => Response | Promise<Response>;
+    port: number;
+  } {
     const app = new Hono();
 
     // Streamable HTTP endpoint
-    app.post('/mcp', async (c) => {
+    app.post("/mcp", async (c) => {
       // TODO: Implement streamable HTTP transport
-      return c.json({ error: 'Streamable HTTP not yet implemented' }, 501);
+      return c.json({ error: "Streamable HTTP not yet implemented" }, 501);
     });
 
     // SSE endpoint
-    app.get('/sse', async (c) => {
+    app.get("/sse", async (c) => {
       const transport = new SSEServerTransport(c.req.raw as any, c.res as any);
       await this.server.connect(transport);
       return c.res;
