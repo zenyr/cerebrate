@@ -1,7 +1,12 @@
 import { beforeAll, beforeEach, describe, expect, it, spyOn } from "bun:test";
+import { mock } from "bun:test";
 import { printUsage, runCli } from "./cli";
 import { EMPTY_CONFIG } from "./consts";
 import type { TestCliDeps } from "./types";
+
+mock.module("./config", () => ({
+  loadConfig: mock(() => EMPTY_CONFIG),
+}));
 
 beforeAll(() => {
   // Set HOME for testing
@@ -46,7 +51,7 @@ describe("CLI", () => {
       const consoleSpy = spyOn(console, "log");
       printUsage();
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Cerebrate MCP Server CLI")
+        expect.stringContaining("Cerebrate MCP Server CLI"),
       );
       consoleSpy.mockRestore();
     });
@@ -75,7 +80,7 @@ describe("CLI", () => {
       await runCli(["--help"]);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Cerebrate MCP Server CLI")
+        expect.stringContaining("Cerebrate MCP Server CLI"),
       );
 
       consoleSpy.mockRestore();
@@ -87,7 +92,7 @@ describe("CLI", () => {
       await runCli([]);
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Cerebrate MCP Server CLI")
+        expect.stringContaining("Cerebrate MCP Server CLI"),
       );
 
       consoleSpy.mockRestore();
@@ -115,7 +120,7 @@ describe("CLI", () => {
 
       expect(deps.mockServer.start).toHaveBeenCalledWith("stdio", 3878);
       expect(consoleSpy).toHaveBeenCalledWith(
-        "--port option is ignored with server command"
+        "--port option is ignored with server command",
       );
 
       consoleSpy.mockRestore();
@@ -142,17 +147,23 @@ describe("CLI", () => {
         },
       };
 
-      const { ToolRegistryClass, MCPServerClass, mockServer } = createMockClasses({
-        loadScopes: () => Promise.resolve(),
-        start: () => Promise.resolve(),
-      });
+      const { ToolRegistryClass, MCPServerClass, mockServer } =
+        createMockClasses({
+          loadScopes: () => Promise.resolve(),
+          start: () => Promise.resolve(),
+        });
 
       const mockLoadConfig = async (path?: string) => {
         expect(path).toBe(configPath);
         return mockConfig;
       };
 
-      const deps = { ToolRegistryClass, MCPServerClass, mockServer, loadConfig: mockLoadConfig };
+      const deps = {
+        ToolRegistryClass,
+        MCPServerClass,
+        mockServer,
+        loadConfig: mockLoadConfig,
+      };
 
       await runCli(["http-server", "--config", configPath], deps);
 
