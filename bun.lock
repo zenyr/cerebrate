@@ -112,9 +112,26 @@
       "name": "@cerebrate/server",
       "version": "0.0.0",
       "dependencies": {
+        "@cerebrate/client": "workspace:*",
         "@cerebrate/core": "workspace:*",
         "@modelcontextprotocol/sdk": "^1.18.2",
         "hono": "^4.6.12",
+      },
+      "devDependencies": {
+        "@cerebrate/config": "workspace:*",
+        "@types/bun": "^1.2.23",
+        "typescript": "^5.7.3",
+      },
+    },
+    "packages/test-utils": {
+      "name": "@cerebrate/test-utils",
+      "version": "0.1.0",
+      "dependencies": {
+        "@cerebrate/client": "workspace:*",
+        "@cerebrate/core": "workspace:*",
+        "@cerebrate/server": "workspace:*",
+        "@modelcontextprotocol/sdk": "^1.18.2",
+        "nanoid": "^5.1.6",
       },
       "devDependencies": {
         "@cerebrate/config": "workspace:*",
@@ -136,6 +153,19 @@
         "@types/bun": "^1.2.23",
         "eslint": "^9.36.0",
         "typescript": "^5.9.3",
+      },
+    },
+    "tests/integration": {
+      "name": "@cerebrate/integration-tests",
+      "version": "0.1.0",
+      "dependencies": {
+        "@cerebrate/client": "workspace:*",
+        "@cerebrate/core": "workspace:*",
+        "@cerebrate/server": "workspace:*",
+        "@cerebrate/test-utils": "workspace:*",
+      },
+      "devDependencies": {
+        "@types/bun": "^1.2.23",
       },
     },
   },
@@ -162,7 +192,11 @@
 
     "@cerebrate/core": ["@cerebrate/core@workspace:packages/core"],
 
+    "@cerebrate/integration-tests": ["@cerebrate/integration-tests@workspace:tests/integration"],
+
     "@cerebrate/server": ["@cerebrate/server@workspace:packages/server"],
+
+    "@cerebrate/test-utils": ["@cerebrate/test-utils@workspace:packages/test-utils"],
 
     "@cerebrate/tui": ["@cerebrate/tui@workspace:packages/tui"],
 
