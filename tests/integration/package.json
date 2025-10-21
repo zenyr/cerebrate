@@ -1,0 +1,22 @@
+{
+  "name": "@cerebrate/integration-tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Integration tests for MCP server/client",
+  "scripts": {
+    "test": "bun test",
+    "test:ci": "bun test --bail",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage"
+  },
+  "dependencies": {
+    "@cerebrate/test-utils": "workspace:*",
+    "@cerebrate/core": "workspace:*",
+    "@cerebrate/server": "workspace:*",
+    "@cerebrate/client": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.2.23"
+  }
+}

@@ -6,7 +6,8 @@
   "packageManager": "bun@1.2.22",
   "workspaces": [
     "packages/*",
-    "clis/*"
+    "clis/*",
+    "tests/*"
   ],
   "scripts": {
     "build:clis": "./scripts/build-all-clis.sh",

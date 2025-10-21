@@ -1,0 +1,16 @@
+{
+  "extends": "@cerebrate/config/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,
+    "paths": {
+      "@cerebrate/core": ["../core/src/index.ts"],
+      "@cerebrate/core/*": ["../core/src/*"],
+      "@cerebrate/server": ["../server/src/index.ts"],
+      "@cerebrate/client": ["../client/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+}
