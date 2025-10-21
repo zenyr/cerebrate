@@ -8,6 +8,14 @@ const customRules = {
     }
     return [true];
   },
+  'english-only': (parsed) => {
+    const fullMessage = [parsed.header, parsed.body, parsed.footer].filter(Boolean).join(' ');
+    // Check for non-ASCII characters (indicates non-English)
+    if (/[^\x00-\x7F]/.test(fullMessage)) {
+      return [false, 'Commit message must be in English only (no non-ASCII characters)'];
+    }
+    return [true];
+  },
 };
 
 export default {
@@ -30,6 +38,7 @@ export default {
       ],
     ],
     'body-required-for-types': [2, 'always'],
+    'english-only': [2, 'always'],
   },
   plugins: [
     {
