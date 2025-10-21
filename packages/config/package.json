@@ -11,7 +11,9 @@
     "tsconfig.json",
     "eslint.config.js"
   ],
-  "scripts": {},
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
   "devDependencies": {
     "@types/bun": "^1.2.23",
     "@typescript-eslint/eslint-plugin": "^8.45.0",
