@@ -89,8 +89,9 @@ export async function createTestServer(
 
   // Register custom tools if provided
   if (options.tools) {
+    const scopeName = options.name || `test-server-${id}`;
     registry.registerScope({
-      name: options.name || `test-server-${id}`,
+      name: scopeName,
       serverInfo: {
         name: options.name || `test-server-${id}`,
         version: options.version || "1.0.0",
@@ -102,6 +103,8 @@ export async function createTestServer(
         transport: "stdio" as const,
       },
     });
+    // Auto-activate the scope so tools are immediately exposed
+    registry.activateScope(scopeName);
   }
 
   const server = new MCPServer(registry);
@@ -112,10 +115,11 @@ export async function createTestServer(
   // Start HTTP server if port is specified
   if (options.port !== undefined) {
     const port = options.port === 0 ? getRandomPort() : options.port;
+    const honoApp = server.createHonoApp(port);
 
     httpServer = Bun.serve({
       port,
-      fetch: server.app.fetch,
+      fetch: honoApp.fetch,
     });
 
     actualPort = httpServer.port;
