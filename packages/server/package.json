@@ -17,6 +17,7 @@
     "@cerebrate/client": "workspace:*",
     "@cerebrate/core": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.18.2",
+    "fetch-to-node": "^2.1.0",
     "hono": "^4.6.12"
   }
 }
